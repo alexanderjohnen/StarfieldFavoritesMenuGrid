@@ -1,0 +1,104 @@
+[center][size=6][b]FAVORITES MENU GRID[/b][/size]
+[size=4]Every favorites row at once, as a grid you can click and edit[/size][/center]
+
+Starfield gives you twelve favorite slots. This gives you several rows of twelve, and draws them all at once.
+
+No wheel to scroll, nothing hidden behind it. Four rows, twelve columns, everything visible, and you click what you want.
+
+[size=4][b]THIS IS A FORK[/b][/size]
+
+The multi-row favorites system underneath is [url=https://www.nexusmods.com/starfield/mods/17906]Favorites Banks[/url] by [b]Sator[/b], who did the hard part: making Starfield hold more than twelve favorites at all, safely, without replacing the wheel.
+
+This build adds the grid and makes it the point. It is an unofficial fork, not endorsed by Sator, released under the same licence. If you want the extra rows on the wheel and nothing else, use the original.
+
+[b]It replaces Favorites Banks. Do not run both.[/b]
+
+[size=4][b]REQUIRES STARFIELD 1.16.244.0[/b][/size]
+
+The plugin refuses to load on any other runtime rather than use addresses it has not verified. Also needs SFSE and Address Library for SFSE Plugins for the same version.
+
+[size=4][b]THE GRID[/b][/size]
+
+[list]
+[*]One row per set of twelve, one cell per slot.
+[*]Column headings show [b]which key fires each column[/b], read from your own key bindings. A glance tells you what "3" will do.
+[*]Click a cell to switch to that row and use the slot. This runs through the wheel's own selection path, so every safeguard it has still applies.
+[*]Hover for the full item name, its row and slot, and the game's own item card.
+[*]Favorites you are not carrying right now are drawn faint, and the hover says so. The wheel just shows those slots as empty, which explains nothing.
+[*]DELETE empties the cell under the cursor. Starfield itself cannot remove a favorite at all - it can only overwrite one.
+[/list]
+
+[size=4][b]EDIT MODE[/b][/size]
+
+The EDIT button in the strip on the right turns it on.
+
+[list]
+[*]Click a favorite to pick it up, then click any cell to put it there - [b]across rows[/b], which the wheel cannot do at all.
+[*]The red X in a cell's corner deletes that favorite. It lights up when the cursor is on it.
+[*]The status line says what you are holding, so a click that did nothing looks different from a click that did not register.
+[/list]
+
+Creating a favorite still happens where it always did: favorite an item in your inventory, or a power in the powers menu.
+
+[size=4][b]RESERVED SLOTS[/b][/size]
+
+Some mods pick a favorite slot in their own options and write their item into it whenever they like. Such a slot belongs to no row, and letting the rows capture it copies that item onto every one you visit.
+
+[b]ExternallyManagedSlots[/b] in the INI leaves such a slot alone entirely and shows it once, in the strip on the right, instead of in the rows. It costs one column on every row - twelve is all the game has.
+
+This was built for my own [url=https://www.nexusmods.com/starfield/mods/17579]UC Classified Gear Sets - AEGIS Prototype Armor[/url], whose Technician set puts a deployable turret and its recall item into one slot. Two items sharing one slot is exactly why the slot has to be reserved: both need to know where they live. For that case the grid draws its own symbols, because a slot like this is the one place the game's icon data cannot be relied on.
+
+[size=4][b]KEYS[/b][/size]
+
+[b]DELETE[/b] empties the slot under the cursor. That is the only key this mod binds, and only while the favorites menu is open.
+
+The normal 1-0, [ and ] quickkeys keep their vanilla behaviour and always act on your [b]default row[/b], which goes back into the game's real slots every time the menu closes. You choose which row that is.
+
+[size=4][b]NO CONTROLLER SUPPORT[/b][/size]
+
+The grid is mouse-driven. Rather than ship a half-working gamepad path there is none at all.
+
+The design is worked out - the wheel's selection is a property the plugin can read and set, so the grid could follow a gamepad without intercepting any input - but I do not play with a controller and will not ship something I cannot test. [b]If you do, say so in the posts.[/b] A willing tester is all this needs.
+
+[size=4][b]HOW THE ROWS WORK[/b][/size]
+
+Every row is stored in a file beside your save, and one row at a time occupies the game's real twelve slots. Browsing rows changes nothing; it only draws. The row you settle on is written into the real slots when you use a slot or close the menu. From then on the game owns it, which is why the quickkeys and the inventory heart behave exactly as they do unmodded.
+
+Which row is live is not something the grid shows you - it draws all of them at once - so leaving whichever row you last clicked in the real slots would make the gameplay quickkeys quietly mean different things at different times. Instead your [b]DefaultRow[/b] goes back in every time the menu closes, and those keys mean one fixed thing.
+
+The rows live beside the save, the twelve real slots live inside it, so every save keeps its own copy of the rows and they rewind with it. Load a save the mod has never seen - one made before you installed it - and it starts from that save's own twelve favorites, placed on your default row, with the other rows empty. It never carries the rows of the save you just left into it.
+
+[size=4][b]INSTALLATION[/b][/size]
+
+Vortex or Mod Organizer 2, or copy the SFSE and Interface folders into the game's Data folder by hand, then launch through sfse_loader.exe:
+
+[code]Starfield/Data/SFSE/Plugins/FavoritesMenuGrid.dll
+Starfield/Data/SFSE/Plugins/FavoritesMenuGrid.ini
+Starfield/Data/Interface/favoritesmenu.swf[/code]
+
+All settings live in FavoritesMenuGrid.ini, which explains every option in place.
+
+[size=4][b]COMPATIBILITY[/b][/size]
+
+[b]Not compatible with any other mod that touches the favorites menu.[/b] That includes Favorites Banks, Favorites Menu Extended, and anything else shipping its own favoritesmenu.swf. They all replace the same file, and only one can win. If Favorites Menu Extended is detected, this plugin disables itself instead of fighting it.
+
+[size=4][b]KNOWN LIMITS[/b][/size]
+
+[list]
+[*]Locked to Starfield 1.16.244.0. A game update needs a matching build.
+[*]No controller support for the grid.
+[*]The inventory heart can only represent the row currently in the real slots.
+[*]Item icons come from the wheel's own item cards, which the game hands over only when favorites change while the menu is open. A slot never described that way shows its editor ID until it is.
+[*]An item you no longer carry leaves its slot faint but still assigned. It works again when the item returns.
+[*]Tested on one setup, not on every load order, language or UI mod. Keep a save backup.
+[/list]
+
+[size=4][b]CREDITS AND LICENCE[/b][/size]
+
+[list]
+[*][b]Sator[/b] for [url=https://www.nexusmods.com/starfield/mods/17906]Favorites Banks[/url], which this is built on.
+[*]Bethesda Game Studios for Starfield and its favorites menu. favoritesmenu.swf is Bethesda's file with added hooks; it is not covered by this mod's licence and remains their property.
+[*]The SFSE team and the CommonLibSF contributors.
+[/list]
+
+Source code is GPL-3.0-or-later with the Modding Exception and the GPL-3.0 Linking Exception, exactly as in the original. The full source of this build is uploaded beside the binary, as that licence requires. LICENSE, EXCEPTIONS and THIRD_PARTY.md in the archive spell out what applies to what.

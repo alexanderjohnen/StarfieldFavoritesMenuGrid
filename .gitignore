@@ -1,0 +1,3 @@
+build/
+.xmake/
+tests/__pycache__/

@@ -1,0 +1,51 @@
+Title:
+Favorites Menu Grid - SFSE
+
+Summary:
+Shows every favorites row at once as a grid you can click and edit. Move
+favorites between slots and rows, delete them, and see which key fires each
+column. A fork of Favorites Banks.
+
+Version:
+1.0.1
+
+Category:
+User Interface
+
+Tags:
+User Interface, Utilities for Players, Quality of Life
+
+File display name:
+Favorites Menu Grid 1.0.1
+
+Source display name:
+Favorites Menu Grid 1.0.1 - Source Code
+
+Main file description:
+Loading a save this mod has never seen - one made before you installed it -
+now starts from that save's own favorites on your default row instead of
+carrying over the rows of the save you just left. Cells whose icon the game
+has not handed over yet show the item's name instead of appearing empty.
+Requires Starfield 1.16.244.0, SFSE and the matching Address Library.
+Replaces Favorites Banks; do not run both.
+
+Source file description:
+Complete corresponding source for Favorites Menu Grid 1.0.1, GPL-3.0-or-later
+with the Modding Exception and the GPL-3.0 Linking Exception, as required by
+that licence.
+
+Permissions and credits - Author's instructions:
+Favorites Menu Grid is an unofficial fork of Favorites Banks by Sator
+(https://www.nexusmods.com/starfield/mods/17906) and carries the same licence:
+GPL-3.0-or-later with the exceptions in EXCEPTIONS. See LICENSE. You may
+redistribute or modify it under those terms, which means shipping the
+corresponding source and stating your changes. Starfield and Bethesda assets,
+including favoritesmenu.swf, are not covered by that licence and remain the
+property of Bethesda; see THIRD_PARTY.md. Do not misrepresent authorship.
+
+--------------------------------------------------------------------------
+Still to fill in before uploading:
+
+- Images: a screenshot of the grid is the single most useful thing on the
+  page. One with EDIT on, showing the red X and the status line, would show
+  what the mod actually does.
