@@ -222,15 +222,49 @@ sammelt jetzt `carriedCounts` im selben Inventardurchlauf, der ohnehin
 `descriptor.visual.count`. Das laeuft bei jedem Oeffnen des Menues und bei
 jeder Erfassung — also genau dann, wenn die Zahl gebraucht wird.
 
-**Icons: weiter offen.** Fuer sie gibt es keine solche Abkuerzung; wo
-Starfield den Bildnamen ablegt, muesste erst gefunden werden (siehe die
-verworfene Ueberlegung in 0b). Der naheliegende Weg bleibt herauszufinden,
-was der Edit-Modus mit den `Entry_N`-Clips macht, das das Befuellen der
-Karten ausloest — ernten, bevor das Rad versteckt wird, oder dieselbe
-Aktualisierung beim Oeffnen anstossen.
+**Icons: bewusst nicht behoben (Entscheidung 2026-09-02).** Ein Spielstand,
+den die Mod noch nie gesehen hat, zeigt in Reihe 1 Editor-IDs statt Icons, bis
+der Edit-Modus einmal an war. Alexander laesst das so: „denke wir haben da
+genug gefixt fuer eine Issue, die ich nie als solche empfunden habe."
 
-**Sobald das steht:** ZombieMonkeyNZ antworten. Sein Verdacht auf StarUI und
-Free Lanes Update ist unbegruendet, das ist rein hausgemacht.
+Falls es doch einmal drankommt: Fuer die Icons gibt es keine Abkuerzung ueber
+das Inventar, wie es sie fuer die Stueckzahl gab — wo Starfield den Bildnamen
+ablegt, muesste erst gefunden werden. Der naheliegende Weg bleibt
+herauszufinden, was der Edit-Modus mit den `Entry_N`-Clips macht, das das
+Befuellen der Karten ausloest.
+
+**ZombieMonkeyNZ kann jetzt beantwortet werden:** Die Stueckzahl ist behoben.
+Sein Verdacht auf StarUI und Free Lanes Update war unbegruendet, das war rein
+hausgemacht.
+
+### Die Blass-Markierung, endgueltig (2026-09-02)
+
+`descriptor.unresolved` wurde durch **vier** Stellen nacheinander gejagt, und
+jede einzelne sah nach der Ursache aus:
+
+1. Der **Commit** setzte `unresolved = !success` und loeschte damit die
+   Markierung, wenn ein Favorit zuweisbar blieb, obwohl das Item weg war.
+2. Die **Erfassung** lief ueber eine Reconcile, die die Markierung ebenfalls
+   loeschte.
+3. Die **Trageprüfung selbst** nahm „kein Inventar-Slot" als „immer
+   vorhanden" — richtig fuer Powers, falsch fuer die drei Technician-Items,
+   die als `kForm` gespeichert sind. Das hat der `carried-probe`-Log
+   aufgeklaert: `kind=2 ... inCarried=false unresolved false->false`.
+4. Der **Seitenwechsel** ging durch keinen der reparierten Pfade:
+   `SwitchBank` materialisiert bewusst nicht, es ruft nur die Reconcile — und
+   dort ersetzt `stored = native;` den Deskriptor komplett, `unresolved`
+   inklusive.
+
+**Konsequenz:** Die Regel steht jetzt am Ende von
+`ReconcileNativePageWithBank`, der einen Routine, durch die jede Umschreibung
+der Reihen laeuft. Einzelne Schreiber zu baendigen hat viermal nicht
+getragen; die Markierung neu zu berechnen ist billig genug, um sie einfach zu
+behaupten.
+
+**Lehre:** Ein Feld, das aus mehreren Richtungen geschrieben wird und dabei
+zwei verschiedene Fragen beantwortet, wird nicht durch das Korrigieren der
+Schreiber richtig, sondern dadurch, dass die Wahrheit an genau einer Stelle
+hergestellt wird.
 
 Der wichtigste Fund des Testabends, von Alexander an einem frisch gesehenen
 Spielstand belegt: Reihe 1 zeigt **ohne** Edit-Modus nur Editor-IDs
@@ -583,8 +617,8 @@ sich zurueckspringen laesst, statt Hypothesen zu bauen. Beides gibt es jetzt.
 
 Die Diagnosemarken fuer diesen Phantomfehler (`load-transition:`, `capture:`)
 sind wieder entfernt. `carried-probe`, `draw-probe` und `SaveLoadEvent:`
-bleiben vorerst, bis das Ausgegraute geklaert ist — **alle drei muessen vor
-der Auslieferung von 1.0.2 raus.**
+ebenfalls, nachdem sie ihre Fragen beantwortet hatten — **das Log ist wieder
+sauber.** Was von ihnen bleibt, sind die Befunde in 0d und 0e.
 
 ---
 

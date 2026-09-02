@@ -1119,6 +1119,10 @@ namespace FB
         // Whether the item behind a stored descriptor is in the player's
         // inventory at this moment. Powers and plain forms have no inventory
         // row to lose, so they always count as present.
+        // Defined further down; declared here because the reconcile ends by
+        // calling it.
+        void RefreshCarriedFlagsLocked(const NativePage& nativePage);
+
         [[nodiscard]] bool DescriptorItemIsCarried(
             const FavoriteSlot& stored,
             const NativePage& nativePage)
@@ -1298,6 +1302,14 @@ namespace FB
                     stored = FavoriteSlot{};
                 }
             }
+            // The flag is put right here, at the end of the one routine every
+            // rewrite of the rows goes through, and nowhere else. It was
+            // chased through four separate writers before this -- the commit,
+            // the materialise, the capture, and finally this reconcile, whose
+            // `stored = native` replaces the descriptor wholesale and with it
+            // resets the flag. Trusting each writer in turn did not hold; the
+            // rule is cheap enough to simply reassert.
+            RefreshCarriedFlagsLocked(nativePage);
         }
 
         [[nodiscard]] int ScoreStoredBank(
@@ -2139,13 +2151,6 @@ namespace FB
         // the native one. Needed after editing a page in place: the stored
         // descriptors changed, so "already committed" is no longer true and
         // the next capture would otherwise write the old arrangement back.
-        // Defined below; needed here so a page change can leave the faint
-        // flags correct. Every point that rewrites the rows now ends by
-        // asking the inventory again, rather than each of them being trusted
-        // to leave the flag alone -- which is what kept going wrong, in a
-        // different place each time.
-        void RefreshCarriedFlagsLocked(const NativePage& nativePage);
-
         [[nodiscard]] bool MaterializeBankLocked(
             std::size_t targetBank,
             bool a_force = false)
@@ -2337,30 +2342,8 @@ namespace FB
                     if (descriptor.Empty()) {
                         continue;
                     }
-                    const auto before = descriptor.unresolved;
                     descriptor.unresolved =
                         !DescriptorItemIsCarried(descriptor, nativePage);
-                    // Diagnose: die Blass-Markierung kommt weiterhin abhanden,
-                    // und zwei Hypothesen lagen daneben. Das hier sagt, was
-                    // die Trageprüfung wirklich sieht.
-                    {
-                        static std::atomic_int reports{ 0 };
-                        if (reports.fetch_add(1) < 80) {
-                            const auto* probe = ResolveForm(descriptor.form);
-                            REX::INFO(
-                                "carried-probe r{}c{} '{}' kind={} resolved={} formID={:08X} inCarried={} unresolved {}->{}",
-                                bank + 1,
-                                index + 1,
-                                descriptor.form.editorID,
-                                static_cast<unsigned>(descriptor.kind),
-                                probe != nullptr,
-                                probe ? probe->GetFormID() : 0u,
-                                probe && nativePage.carriedForms.contains(
-                                    probe->GetFormID()),
-                                before,
-                                descriptor.unresolved);
-                        }
-                    }
                     if (descriptor.kind != FavoriteKind::kInventory) {
                         continue;
                     }
@@ -2386,8 +2369,6 @@ namespace FB
             }
             const auto nativePage = CaptureNativePage(manager, player);
             ReconcileNativePageWithBank(g_nativeBank, nativePage, true);
-            // After the reconcile, never before: it is what clears the flag.
-            RefreshCarriedFlagsLocked(nativePage);
             ApplyPendingVisualLocked();
             static_cast<void>(SaveCurrentStateLocked(saveSnapshot));
         }

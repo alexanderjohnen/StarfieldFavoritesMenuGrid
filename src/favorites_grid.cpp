@@ -2421,27 +2421,6 @@ namespace FB
             }
         }
 
-        // Diagnose: was das Zeichnen tatsaechlich vorfindet, direkt neben
-        // dem, was die Trageprüfung berechnet hat. Weichen die beiden ab,
-        // setzt jemand dazwischen zurueck.
-        {
-            static std::atomic_int reports{ 0 };
-            if (reports.fetch_add(1) < 20) {
-                for (std::size_t slot = 0; slot < kSlotsPerBank; ++slot) {
-                    const auto& cell = banks[activeBank][slot];
-                    if (cell.Empty()) {
-                        continue;
-                    }
-                    REX::INFO(
-                        "draw-probe r{}c{} '{}' unresolved={}",
-                        activeBank + 1,
-                        slot + 1,
-                        cell.form.editorID,
-                        cell.unresolved);
-                }
-            }
-        }
-
         // Drawn after the cells so it sits on top of them, and on the active
         // row because that is the page the wheel is showing.
         const auto selected = ReadSelectedIndex(menu);

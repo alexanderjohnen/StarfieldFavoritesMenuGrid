@@ -1193,32 +1193,37 @@ class SourceInvariantTests(unittest.TestCase):
         writes still describes the inventory.
         """
         core = strip_line_comments(self.core)
-        materialize = core.split("bool MaterializeBankLocked", 1)[1].split(
-            "void RefreshCarriedFlagsLocked", 1
+        # The reconcile is the one routine every rewrite of the rows goes
+        # through, and it ends by reasserting the flag. Browsing pages does
+        # not materialise anything, so putting it only in the commit or the
+        # materialise left a page change bright - which is exactly how this
+        # was found, for the fourth time.
+        reconcile = core.split("void ReconcileNativePageWithBank", 1)[1].split(
+            "int ScoreStoredBank", 1
         )[0]
-        self.assertIn("RefreshCarriedFlagsLocked(committed);", materialize)
-        # Declared before use, since the definition sits further down.
+        self.assertIn("RefreshCarriedFlagsLocked(nativePage);", reconcile)
         self.assertIn(
             "void RefreshCarriedFlagsLocked(const NativePage& nativePage);",
             core)
+        switch = core.split("bool SwitchBank", 1)[1].split("RenderActiveBank", 1)[0]
+        self.assertIn("ReconcileNativePageWithBank", switch)
 
     def test_a_capture_keeps_the_faint_flag_honest(self) -> None:
         """Saving must not make an item the player lost look carried.
 
-        The faint flag was only ever set after a load, while every capture
-        ran a reconcile against the native slots - and those keep holding an
-        item that is no longer in the inventory. So a slot correctly drawn
-        faint went bright again for no better reason than the game having
-        been saved.
+        The flag was only ever set after a load, while every capture ran a
+        reconcile against the native slots - and those keep holding an item
+        that is no longer in the inventory. So a slot correctly drawn faint
+        went bright again for no better reason than the game having been
+        saved. The capture gets this through the reconcile it runs, which is
+        where the rule now lives; it must not carry a second copy.
         """
         core = strip_line_comments(self.core)
         capture = core.split("void CaptureCurrentBankLocked", 1)[1].split(
             "void RefreshCarriedFlags(", 1
         )[0]
-        self.assertIn("RefreshCarriedFlagsLocked(nativePage);", capture)
-        # And only after the reconcile, which is what clears the flag.
-        reconcile = capture.index("ReconcileNativePageWithBank")
-        self.assertLess(reconcile, capture.index("RefreshCarriedFlagsLocked"))
+        self.assertIn("ReconcileNativePageWithBank(g_nativeBank", capture)
+        self.assertNotIn("RefreshCarriedFlagsLocked", capture)
 
     def test_the_per_save_file_does_not_depend_on_a_save_event(self) -> None:
         """The per-save file is the primary store, so it cannot be rare.

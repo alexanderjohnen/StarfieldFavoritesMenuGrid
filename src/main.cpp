@@ -606,13 +606,6 @@ namespace
             RE::BSTEventSource<RE::SaveLoadEvent>*) override
         {
             using Status = RE::SaveLoadEvent::Status;
-            // Diagnose: der Snapshot-Zweig hat nachweislich nie gelaufen,
-            // obwohl gespeichert wurde. Bevor irgendetwas daran umgebaut
-            // wird, muss belegt sein, welche Ereignisse ueberhaupt kommen.
-            REX::INFO(
-                "SaveLoadEvent: opType={} status={}",
-                static_cast<unsigned>(event.opType),
-                static_cast<unsigned>(event.status));
             if (event.status == Status::kBegin &&
                 IsLoadOperation(event.opType)) {
                 // Which save is coming in has to be read now: the manager
