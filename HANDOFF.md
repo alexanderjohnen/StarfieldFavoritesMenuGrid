@@ -23,9 +23,9 @@ Windows-Hook, XInput/Schultertasten, Seitenanzeiger, `IconSize`,
 echten Slots zurück). Nach außen heißt alles „row", nicht mehr „page" oder
 „bank"; im Speicher-Code steht „bank" weiterhin.
 
-**Verbleibende INI-Optionen (7):** `[Grid]` RowCount, DefaultRow,
+**Verbleibende INI-Optionen (8):** `[Grid]` RowCount, DefaultRow,
 PowerIconScalePercent · `[Controls]` ClearSlotKey, ToggleEquipOnSelect,
-ExternallyManagedSlots, PinnedSymbols.
+WrapNavigation, ExternallyManagedSlots, PinnedSymbols.
 
 `HideWheel`, `Enabled` und `Icons` sind am 2026-09-02 **ersatzlos entfallen**,
 `[Settings]` als Sektion ebenfalls (0h).
@@ -717,6 +717,32 @@ Leere, bei acht waere die Haelfte per Geste unerreichbar.
 nur die ein, die wir pflegen, importiert zurueck und legt eine `.bak` an.
 Vorher wurde geprueft, dass ein Durchlauf **ohne** Aenderung zeichengleich
 zurueckdekompiliert — das Werkzeug selbst veraendert also nichts.
+
+**Erster Test, zwei Nachbesserungen (2026-09-02).** Links/rechts durch die
+Slots und hoch/runter durch die Reihen funktionierte sofort. Zwei Dinge nicht:
+
+1. **Die Auswahl startete nicht auf Slot 1.** Die Richtung, mit der das Rad
+   geoeffnet wird, kommt **zusaetzlich als Tastenereignis** an und wurde
+   sofort als Bewegung ausgefuehrt. `FavoritesBanksFreshOpen` verschluckt
+   jetzt den ersten Richtungsdruck nach dem Oeffnen.
+2. **Der Reihenwechsel warf die Auswahl auf den Anfang zurueck.** Die SWF
+   setzt beim Wechsel der gezeichneten Reihe `selectedIndex = FS_NONE` — im
+   Rad sinnvoll, dessen Ringe je Seite andere zwoelf sind; im Raster sind es
+   immer dieselben zwoelf. Der Slot wird jetzt um die Aktualisierung herum
+   gesichert und wiederhergestellt (nicht einfach stehengelassen, damit die
+   Entry-Clips ihre Auswahlmarkierung mitbekommen).
+
+**Neue Option `[Controls] WrapNavigation`** (Standard 0, Alexanders
+Vorschlag): Enden als Wand oder als Tuer — Slot 12 nach rechts bleibt stehen
+oder landet auf Slot 1, Reihe 1 nach oben ebenso. Gilt fuer Slots **und**
+Reihen. Diese Option ist von anderer Art als die vier ausgebauten: Es gibt
+keine richtige Antwort, nur einen Geschmack. Genau dafuer sind Optionen da.
+
+**Offen, noch nicht angefasst:** Mit `ExternallyManagedSlots` wandert der
+Schritt weiterhin durch alle zwoelf Indizes, auch durch reservierte — die
+aber nicht in der Reihe gezeichnet werden, sondern im Streifen rechts. Der
+Marker versteckt sich dann (er zeigt nur, was in `geometry.pageSlots` steht).
+Bei Alexander faellt das nicht auf, er hat `ExternallyManagedSlots=0`.
 
 **Ungetestet.** Zu pruefen: wechselt hoch/runter die Reihe, wandert
 links/rechts durch die Slots, und startet die Auswahl auf Slot 1.

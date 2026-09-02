@@ -1048,6 +1048,41 @@ class SourceInvariantTests(unittest.TestCase):
         self.assertIn("QueueCaptureCurrentState(true)", branch)
         self.assertIn("QueueLoadedGameInitialization()", branch)
 
+    def test_the_d_pad_is_rewritten_rather_than_intercepted(self) -> None:
+        """The movie ships with this mod, so the keys are redefined in it.
+
+        The earlier plan reached for the shoulder buttons and XInput because
+        the vanilla D-pad writes selectedIndex itself and that reaction would
+        have had to be suppressed. It does not have to be: up and down change
+        the row, left and right step through the slots, and both branches
+        stand down when the callback is absent so a new movie with an old DLL
+        keeps its vanilla meaning.
+        """
+        as_source = (
+            ROOT / "swf-src" / "scripts" / "FavoritesMenu.as"
+        ).read_text(encoding="utf-8", errors="replace")
+        self.assertIn("if(this.FavoritesBanksSwitchRow != null)", as_source)
+        self.assertIn("this.FavoritesBanksSwitchRow(-1);", as_source)
+        self.assertIn("this.FavoritesBanksSwitchRow(1);", as_source)
+        self.assertIn("FavoritesBanksStepSlot", as_source)
+        # The direction that opens the wheel arrives here too and must not
+        # move anything: the selection starts on slot 1 whatever was pressed.
+        self.assertIn("FavoritesBanksFreshOpen", as_source)
+        # A row change keeps the slot; the wheel used to blank the selection.
+        self.assertIn("_loc5_ != FS_NONE", as_source)
+        # Ends of a row: walls or doors, and that one is the player's call.
+        self.assertIn("FavoritesBanksWrapNavigation", as_source)
+
+        ui = strip_line_comments(
+            (ROOT / "src" / "favorites_ui.cpp").read_text(encoding="utf-8")
+        )
+        self.assertIn("class SwitchRowHandler", ui)
+        self.assertIn('"FavoritesBanksSwitchRow"', ui)
+        self.assertIn('"FavoritesBanksWrapNavigation"', ui)
+        self.assertIn("g_settings.wrapNavigation", ui)
+        ini = (ROOT / "FavoritesMenuGrid.ini").read_text(encoding="utf-8")
+        self.assertIn("WrapNavigation=", ini)
+
     def test_the_grid_shows_the_wheel_s_own_selection(self) -> None:
         """Controller support starts with seeing where you are.
 

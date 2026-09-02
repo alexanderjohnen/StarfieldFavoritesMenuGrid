@@ -96,11 +96,18 @@ package
       public var FavoritesBanksClearSlot:Function = null;
       
       public var FavoritesBanksSwitchRow:Function = null;
+      
+      // The direction that opens the wheel also arrives here as a key press.
+      // Acting on it moved the selection off slot 1 before the player had
+      // pressed anything, so the first direction after an open is consumed.
+      private var FavoritesBanksFreshOpen:Boolean = false;
 
       // 0 disables it. Flash key codes match Windows virtual key codes
       // for the keys this accepts, so the DLL passes the parsed INI
       // value straight through.
       public var FavoritesBanksClearSlotKey:int = 0;
+      
+      public var FavoritesBanksWrapNavigation:Boolean = false;
       
       private var AssignedItem:Object = null;
       
@@ -168,6 +175,7 @@ package
             this.selectedIndex = this.FavoritesBanksSwitchRow != null
                ? 0
                : param1.data.uStartingSelection;
+            this.FavoritesBanksFreshOpen = this.FavoritesBanksSwitchRow != null;
             this.CenterClip_mc.gotoAndStop(this.isAssigningItem() ? "Inventory" : "Quick");
          }
          this.SelectQuickslot_mc.visible = this.isAssigningItem() && !this.HasAssignedSlotOnce;
@@ -210,12 +218,23 @@ package
             this.FavoritesInfoA = this.VirtualFavoritesInfoA;
          }
          var _loc4_:Boolean = this._RenderedBank != -1 && this._RenderedBank != param2;
+         // Which slot the player was on carries over to the next row. The
+         // wheel cleared it because its rings are a different set of twelve
+         // for every page; the grid stacks the same twelve, so landing back
+         // at the start on every row change is just lost work. Cleared and
+         // restored around the refresh rather than left alone, so the entry
+         // clips still get told which one is selected.
+         var _loc5_:uint = uint(this.selectedIndex);
          if(_loc4_)
          {
             this.selectedIndex = FS_NONE;
          }
          this._RenderedBank = param2;
          this.RefreshFavoriteEntries(_loc4_);
+         if(_loc4_ && this.FavoritesBanksSwitchRow != null && _loc5_ != FS_NONE)
+         {
+            this.selectedIndex = _loc5_;
+         }
       }
       
       public function isAssigningItem() : Boolean
@@ -392,6 +411,15 @@ package
          }
          if(this.FavoritesBanksSwitchRow != null)
          {
+            if(this.FavoritesBanksFreshOpen
+               && (param1.keyCode == Keyboard.UP
+                  || param1.keyCode == Keyboard.DOWN
+                  || param1.keyCode == Keyboard.LEFT
+                  || param1.keyCode == Keyboard.RIGHT))
+            {
+               this.FavoritesBanksFreshOpen = false;
+               return;
+            }
             switch(param1.keyCode)
             {
                case Keyboard.UP:
@@ -437,6 +465,11 @@ package
             return 0;
          }
          _loc2_ += param1;
+         if(this.FavoritesBanksWrapNavigation)
+         {
+            _loc2_ = (_loc2_ % int(FS_NONE) + int(FS_NONE)) % int(FS_NONE);
+            return uint(_loc2_);
+         }
          if(_loc2_ < 0)
          {
             _loc2_ = 0;

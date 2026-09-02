@@ -87,6 +87,10 @@ namespace FB
         // turns, so one of them is usually undescribed. A symbol drawn from
         // the item's editor ID needs no card at all.
         bool gridPinnedSymbols{ true };
+        // Whether the ends of a row and the ends of the row stack are walls
+        // or doors. There is no right answer to this one, which is why it is
+        // a setting and the removed ones were not.
+        bool wrapNavigation{ false };
 
         // The key each quick slot is bound to, as the game's own bindings
         // screen shows it, or empty where nothing is bound. Read once at

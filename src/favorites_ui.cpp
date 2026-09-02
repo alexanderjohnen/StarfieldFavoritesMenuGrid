@@ -166,11 +166,12 @@ namespace FB
                 {
                     std::scoped_lock lock(g_stateMutex);
                     const auto rows = static_cast<int>(g_settings.rowCount);
-                    // Clamped, not wrapped. Holding a direction to run off
-                    // the end and reappear at the other one reads as a
-                    // glitch on a list this short.
-                    const auto next = std::clamp(
-                        static_cast<int>(g_activeBank) + delta, 0, rows - 1);
+                    auto next = static_cast<int>(g_activeBank) + delta;
+                    if (g_settings.wrapNavigation) {
+                        next = ((next % rows) + rows) % rows;
+                    } else {
+                        next = std::clamp(next, 0, rows - 1);
+                    }
                     target = static_cast<std::size_t>(next);
                     if (target == g_activeBank) {
                         return;
@@ -367,6 +368,9 @@ namespace FB
         root->CreateFunction(&clearCallback, new ClearSlotHandler());
         static_cast<void>(menu->menuObj.SetMember(
             "FavoritesBanksClearSlot", clearCallback));
+        static_cast<void>(menu->menuObj.SetMember(
+            "FavoritesBanksWrapNavigation",
+            RE::Scaleform::GFx::Value(g_settings.wrapNavigation)));
         static_cast<void>(menu->menuObj.SetMember(
             "FavoritesBanksClearSlotKey",
             RE::Scaleform::GFx::Value(

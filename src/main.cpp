@@ -380,6 +380,8 @@ namespace
             static_cast<int>(FB::g_settings.rowCount)));
         FB::g_settings.toggleEquipOnSelect = ReadMovedInt(
             path, L"Controls", L"Settings", L"ToggleEquipOnSelect", "ToggleEquipOnSelect", 1) != 0;
+        FB::g_settings.wrapNavigation = GetPrivateProfileIntW(
+            L"Controls", L"WrapNavigation", 0, path.c_str()) != 0;
         FB::g_settings.clearSlotKey = ReadVirtualKey(
             path, L"ClearSlotKey", VK_DELETE);
         ParseExternallyManagedSlots(
@@ -387,11 +389,12 @@ namespace
                 path, L"Controls", L"ExternallyManagedSlots", L"NONE"));
 
         REX::INFO(
-            "Favorites Menu Grid settings: rows={}, defaultRow={}, clearKey=0x{:02X}, toggleEquipOnSelect={}, pinnedSymbols={}, powerIconScale={}%",
+            "Favorites Menu Grid settings: rows={}, defaultRow={}, clearKey=0x{:02X}, toggleEquipOnSelect={}, wrapNavigation={}, pinnedSymbols={}, powerIconScale={}%",
             FB::g_settings.rowCount,
             FB::g_settings.defaultRow,
             FB::g_settings.clearSlotKey,
             FB::g_settings.toggleEquipOnSelect,
+            FB::g_settings.wrapNavigation,
             FB::g_settings.gridPinnedSymbols,
             FB::g_settings.gridPowerIconScalePercent);
     }
