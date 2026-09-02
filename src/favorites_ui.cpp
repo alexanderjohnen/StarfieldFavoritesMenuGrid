@@ -132,6 +132,57 @@ namespace FB
             }
         };
 
+        // Moves the shown row, called from the wheel's own key handler.
+        //
+        // The D-pad is not intercepted anywhere: FavoritesMenu.as is shipped
+        // with this mod, so what up and down *mean* is simply rewritten
+        // there. Vertical belongs to the rows because the grid stacks them
+        // vertically; the vanilla mapping walks the wheel's rings instead,
+        // which says nothing about a grid.
+        class SwitchRowHandler final :
+            public RE::Scaleform::GFx::FunctionHandler
+        {
+        public:
+            void Call(const Params& params) override
+            {
+                if (params.argCount < 1) {
+                    return;
+                }
+                double raw = 0.0;
+                if (params.args[0].IsNumber()) {
+                    raw = params.args[0].GetNumber();
+                } else if (params.args[0].IsInt()) {
+                    raw = static_cast<double>(params.args[0].GetInt());
+                } else if (params.args[0].IsUInt()) {
+                    raw = static_cast<double>(params.args[0].GetUInt());
+                } else {
+                    return;
+                }
+                const auto delta = raw < 0.0 ? -1 : (raw > 0.0 ? 1 : 0);
+                if (delta == 0) {
+                    return;
+                }
+                std::size_t target = 0;
+                {
+                    std::scoped_lock lock(g_stateMutex);
+                    const auto rows = static_cast<int>(g_settings.rowCount);
+                    // Clamped, not wrapped. Holding a direction to run off
+                    // the end and reappear at the other one reads as a
+                    // glitch on a list this short.
+                    const auto next = std::clamp(
+                        static_cast<int>(g_activeBank) + delta, 0, rows - 1);
+                    target = static_cast<std::size_t>(next);
+                    if (target == g_activeBank) {
+                        return;
+                    }
+                }
+                QueueBankSwitch(target);
+                if (params.ret) {
+                    *params.ret = RE::Scaleform::GFx::Value(true);
+                }
+            }
+        };
+
         class MenuLogHandler final :
             public RE::Scaleform::GFx::FunctionHandler
         {
@@ -320,6 +371,14 @@ namespace FB
             "FavoritesBanksClearSlotKey",
             RE::Scaleform::GFx::Value(
                 static_cast<double>(g_settings.clearSlotKey))));
+
+        RE::Scaleform::GFx::Value rowCallback;
+        root->CreateFunction(&rowCallback, new SwitchRowHandler());
+        if (!menu->menuObj.SetMember(
+                "FavoritesBanksSwitchRow", rowCallback)) {
+            REX::WARN(
+                "Favorites Menu Grid could not attach the row callback; the D-pad will keep its vanilla meaning");
+        }
 
         RE::Scaleform::GFx::Value visualsCallback;
         root->CreateFunction(&visualsCallback, new NativeVisualsHandler());

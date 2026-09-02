@@ -94,6 +94,8 @@ package
       public var FavoritesBanksIconFrame:int = 2;
 
       public var FavoritesBanksClearSlot:Function = null;
+      
+      public var FavoritesBanksSwitchRow:Function = null;
 
       // 0 disables it. Flash key codes match Windows virtual key codes
       // for the keys this accepts, so the DLL passes the parsed INI
@@ -163,7 +165,9 @@ package
          if(!this.IsDataInitialized)
          {
             this.assignedItem = param1.data.ItemToBeAssigned;
-            this.selectedIndex = param1.data.uStartingSelection;
+            this.selectedIndex = this.FavoritesBanksSwitchRow != null
+               ? 0
+               : param1.data.uStartingSelection;
             this.CenterClip_mc.gotoAndStop(this.isAssigningItem() ? "Inventory" : "Quick");
          }
          this.SelectQuickslot_mc.visible = this.isAssigningItem() && !this.HasAssignedSlotOnce;
@@ -386,6 +390,24 @@ package
             param1.stopPropagation();
             return;
          }
+         if(this.FavoritesBanksSwitchRow != null)
+         {
+            switch(param1.keyCode)
+            {
+               case Keyboard.UP:
+                  this.FavoritesBanksSwitchRow(-1);
+                  break;
+               case Keyboard.DOWN:
+                  this.FavoritesBanksSwitchRow(1);
+                  break;
+               case Keyboard.LEFT:
+                  this.selectedIndex = this.FavoritesBanksStepSlot(-1);
+                  break;
+               case Keyboard.RIGHT:
+                  this.selectedIndex = this.FavoritesBanksStepSlot(1);
+            }
+            return;
+         }
          switch(param1.keyCode)
          {
             case Keyboard.UP:
@@ -400,6 +422,30 @@ package
             case Keyboard.RIGHT:
                this.selectedIndex = this._RightDirectory[this.selectedIndex];
          }
+      }
+      
+      // One step along the row the grid draws, clamped at both ends.
+      // The vanilla tables jump between the wheel's compass directions,
+      // which has nothing to do with a row of twelve cells. selectedIndex
+      // is a uint, so the step is computed as an int first: decrementing
+      // zero would otherwise wrap to four billion.
+      public function FavoritesBanksStepSlot(param1:int) : uint
+      {
+         var _loc2_:int = int(this.selectedIndex);
+         if(_loc2_ < 0 || _loc2_ >= FS_NONE)
+         {
+            return 0;
+         }
+         _loc2_ += param1;
+         if(_loc2_ < 0)
+         {
+            _loc2_ = 0;
+         }
+         if(_loc2_ > int(FS_NONE) - 1)
+         {
+            _loc2_ = int(FS_NONE) - 1;
+         }
+         return uint(_loc2_);
       }
       
       public function onKeyUpHandler(param1:KeyboardEvent) : *

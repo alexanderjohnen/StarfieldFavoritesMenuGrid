@@ -681,6 +681,46 @@ Reihe**, weil das die Seite ist, die das Rad zeigt. Liegt der Index nicht in
 Controller: Steuerkreuz druecken, der Umriss muss mitwandern — links/rechts
 durch die Slots 1-6, hoch/runter durch 7-12.
 
+### Schritt 2 gebaut: das Steuerkreuz gehoert jetzt dem Raster (2026-09-02)
+
+**Der Entwurf mit Schultertasten und XInput ist verworfen.** Alexanders
+Einwand traf: Die Vanilla-Reaktion muss gar nicht unterdrueckt werden, weil
+**die Mod die SWF selbst ausliefert**. Was die Tasten bedeuten, wird also
+schlicht im ActionScript umgeschrieben. Kein XInput, kein Polling, keine
+Eingabeunterdrueckung — und die Pfeiltasten der Tastatur verhalten sich als
+Zugabe gleich.
+
+**Belegung:** hoch/runter wechselt die **Reihe**, links/rechts den **Slot**
+(linear, an beiden Enden geklemmt statt umlaufend — auf zwoelf Zellen liest
+sich Umlaufen wie ein Fehler). Beim Oeffnen landet die Auswahl immer auf
+Slot 1, statt auf dem Platz, den die gedrueckte Richtung im Rad getroffen
+haette.
+
+Verworfen wurde dabei Alexanders eigener zweiter Vorschlag (hoch/links/rechts/
+runter waehlen beim Oeffnen Reihe 1/2/3/4): Er setzt genau vier Reihen voraus,
+`RowCount` geht aber von 2 bis 8. Bei zwei Reihen zeigten zwei Richtungen ins
+Leere, bei acht waere die Haelfte per Geste unerreichbar.
+
+**Teile:**
+- `SwitchRowHandler` in `favorites_ui.cpp`, registriert als
+  `FavoritesBanksSwitchRow` — dasselbe Muster wie `FavoritesBanksClearSlot`.
+  Nimmt ein Vorzeichen, klemmt auf `rowCount`, ruft `QueueBankSwitch`.
+- `FavoritesBanksStepSlot` in `FavoritesMenu.as`. Rechnet als `int`, weil
+  `selectedIndex` ein `uint` ist: Null zu dekrementieren liefe sonst auf vier
+  Milliarden ueber.
+- Beide Zweige haengen an `this.FavoritesBanksSwitchRow != null`. Fehlt der
+  Rueckruf (neue SWF, alte DLL), greifen die alten Richtungstabellen
+  unveraendert.
+
+**`swf-src/scripts/` ist ab jetzt Quellcode, keine Referenz mehr.**
+`build_swf.py` baut die SWF neu: exportiert alle 59 Skripte mit FFDec, tauscht
+nur die ein, die wir pflegen, importiert zurueck und legt eine `.bak` an.
+Vorher wurde geprueft, dass ein Durchlauf **ohne** Aenderung zeichengleich
+zurueckdekompiliert — das Werkzeug selbst veraendert also nichts.
+
+**Ungetestet.** Zu pruefen: wechselt hoch/runter die Reihe, wandert
+links/rechts durch die Slots, und startet die Auswahl auf Slot 1.
+
 **Weiter ungeprueft:** ob das *Setzen* von `selectedIndex` die sichtbare Markierung
 mitzieht und ob A danach den richtigen Slot benutzt. Der XInput-Code wurde
 beim Aufräumen entfernt und müsste aus der Git-losen Historie oder aus
