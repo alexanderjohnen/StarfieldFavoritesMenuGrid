@@ -554,6 +554,40 @@ Bedingung mehr — die Mod ist das Raster.
 
 ---
 
+## 0i. Auf GitHub, und ein gejagtes Gespenst (2026-09-02)
+
+**Das Projekt liegt jetzt unter Versionskontrolle und oeffentlich auf GitHub:**
+`https://github.com/alexanderjohnen/StarfieldFavoritesMenuGrid` (GPL-3.0, wie
+`StarfieldVATS`). Erster Commit `01fbdb7`. Vorher hatte dieses Projekt
+**ueberhaupt keine Historie** — und genau das hat am selben Abend Geld
+gekostet, siehe unten. Ab jetzt: vor jedem Deploy committen.
+
+**Das Gespenst:** Nach einem Dutzend Aenderungen lud ein Spielstand nicht mehr
+— erst ein Hardcrash, dann Schwarzbild ohne Ende. Der Log endete direkt nach
+`is loading save`, also mitten in `BeginLoadTransition()`. Ich habe daraufhin
+zwei Mechanismen im eigenen Code konstruiert (eine verbreiterte
+Sperrreihenfolge im Commit, die `stacks`-Schleife in `CaptureNativePage`) und
+Diagnose dafuer eingebaut.
+
+**Es war nichts davon.** Der Crashlog zeigte eine Zugriffsverletzung in
+`SpecialK64.dll` auf `BSJobs 1`, ohne unsere DLL im Backtrace, und unser Log
+zeigte, dass das Plugin zum Absturzzeitpunkt seit einer Minute nichts getan
+hatte. Alexander hat den PC neu gestartet — seither laedt alles. Vorausgegangen
+war ein erzwungenes Beenden von Starfield ueber den Task-Manager.
+
+**Lehre, teurer als sie klingt:** Ein Fehlerbild, das nach vielen Aenderungen
+auftaucht, verfuehrt dazu, die Ursache unter den eigenen Aenderungen zu suchen.
+Der billigste Test ist der, den ich zu spaet vorgeschlagen habe — **einmal ohne
+die eigene DLL starten**. Und der zweitbilligste ist eine Historie, mit der
+sich zurueckspringen laesst, statt Hypothesen zu bauen. Beides gibt es jetzt.
+
+Die Diagnosemarken fuer diesen Phantomfehler (`load-transition:`, `capture:`)
+sind wieder entfernt. `carried-probe`, `draw-probe` und `SaveLoadEvent:`
+bleiben vorerst, bis das Ausgegraute geklaert ist — **alle drei muessen vor
+der Auslieferung von 1.0.2 raus.**
+
+---
+
 ## 0a. Controller-Support: Entwurf, ungebaut
 
 Wird auf Nexus und Discord nachgefragt. Der Weg ist recherchiert.

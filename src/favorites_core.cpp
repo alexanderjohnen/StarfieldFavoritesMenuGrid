@@ -2359,9 +2359,7 @@ namespace FB
             if (!g_sessionInitialized || !manager || !player) {
                 return;
             }
-            REX::INFO("capture: reading native page");
             const auto nativePage = CaptureNativePage(manager, player);
-            REX::INFO("capture: native page read");
             ReconcileNativePageWithBank(g_nativeBank, nativePage, true);
             // After the reconcile, never before: it is what clears the flag.
             RefreshCarriedFlagsLocked(nativePage);
@@ -3077,9 +3075,6 @@ namespace FB
 
     void BeginLoadTransition()
     {
-        // Diagnose: der Ladevorgang haengt unmittelbar nach NoteIncomingSave.
-        // Diese Marken sagen, an welcher Sperre.
-        REX::INFO("load-transition: entered");
         {
             // Preserve the page that is currently native before the load
             // replaces the player inventory. Save/load events are delivered
@@ -3090,16 +3085,13 @@ namespace FB
                 CaptureCurrentBankLocked(false);
             }
         }
-        REX::INFO("load-transition: pre-capture done");
         g_sessionGeneration.fetch_add(1, std::memory_order_acq_rel);
         g_switchQueued.store(false, std::memory_order_release);
         g_captureQueued.store(false, std::memory_order_release);
         g_commitQueued.store(false, std::memory_order_release);
         g_snapshotRequested.store(false, std::memory_order_release);
         g_favoritesMenuVisible.store(false, std::memory_order_release);
-        REX::INFO("load-transition: taking state lock");
         std::scoped_lock lock(g_stateMutex);
-        REX::INFO("load-transition: state lock held");
         g_sessionInitialized = false;
         g_stateLoaded = false;
         g_characterID = 0;
@@ -3113,7 +3105,7 @@ namespace FB
         g_pinnedSlots = FavoriteBank{};
         g_pinnedVisuals.clear();
         g_pinnedSeenAt.fill({});
-        REX::INFO("load-transition: complete");
+        REX::DEBUG("Favorites Menu Grid load transition reset complete");
     }
 
     void QueueLoadedGameInitialization()
