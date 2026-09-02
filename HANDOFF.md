@@ -786,6 +786,37 @@ mitzieht und ob A danach den richtigen Slot benutzt. Der XInput-Code wurde
 beim Aufräumen entfernt und müsste aus der Git-losen Historie oder aus
 `FavoritesBanks-0.7.5-source/src/main.cpp` zurückgeholt werden.
 
+## 0j. Wie die oeffentlichen Texte klingen sollen (2026-09-02)
+
+Zwei Vorgaben von Alexander, beide aus dem Ueberarbeiten der 1.0.2-Beschreibung.
+
+**Nutzen positiv beschreiben, nicht als Kontrast.** Nicht „das Vanilla-Menue
+kann X nicht", „Starfield kann das gar nicht", „which explains nothing".
+Einfach sagen, was die Mod tut. Sein Wort: „Auf die positiven Seiten
+konzentrieren, ohne das andere schlecht zu machen." Betroffen waren vier
+Stellen in der Beschreibung; die Aussage blieb bei allen vieren vollstaendig
+erhalten, der Vergleich trug nur Tonfall. Sachliche
+Kompatibilitaetshinweise („replaces Favorites Banks, do not run both") sind
+davon **nicht** betroffen, die sind Information.
+
+**Dritte Person, kein „my own".** Auf der Nexus-Seite steht oben ein
+Disclaimer: Die Mod ist Alexanders, der Text darunter ist von Claude
+geschrieben, bis auf einzelne Edits. Ein „my own" darunter liest sich
+deshalb falsch — es klaenge, als gehoerte das verlinkte Gear Set dem
+Textautor. Beschreibung und README enthalten inzwischen keine Ich-Form mehr.
+
+**Und nicht „wheel".** Bethesda nennt das Vanilla-Menue nirgends so: Im
+gesamten Vanilla-ActionScript steht das Wort genau einmal, als
+`"Mousewheel"` fuer das Eingabegeraet. Die eigenen Namen sind
+`FavoritesMenu`, `Quickslot_mc`, `UIMenuQuickUseFocusDpadA/B/C`. Und die Form
+ist ein Kreuz, nicht ein Rad: vier Richtungen mal drei Ringe. Der Begriff
+stammt aus der Modding-Sprache (Skyrim und Fallout hatten radiale
+Favoritenmenues). In der Einleitung ist er raus; im Rest der Beschreibung
+steht er noch neunmal, im README vierzehnmal — **noch nicht entschieden**, ob
+durchgaengig umbenannt wird.
+
+---
+
 ## 1. Wo liegt was
 
 | Was | Pfad |

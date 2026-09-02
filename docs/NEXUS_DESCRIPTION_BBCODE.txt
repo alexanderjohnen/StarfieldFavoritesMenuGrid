@@ -1,9 +1,7 @@
 [center][size=6][b]FAVORITES MENU GRID[/b][/size]
 [size=4]Every favorites row at once, as a grid you can click and edit[/size][/center]
 
-Starfield gives you twelve favorite slots. This gives you several rows of twelve, and draws them all at once.
-
-No wheel to scroll, nothing hidden behind it. Four rows, twelve columns, everything visible, and you click what you want.
+Starfield's vanilla favorites menu limits you to twelve slots. Favorites Menu Grid extends that to up to eight rows of twelve. Now with controller support!
 
 [size=4][b]THIS IS A FORK[/b][/size]
 
@@ -46,7 +44,7 @@ Some mods pick a favorite slot in their own options and write their item into it
 
 [b]ExternallyManagedSlots[/b] in the INI leaves such a slot alone entirely and shows it once, in the strip on the right, instead of in the rows. It costs one column on every row - twelve is all the game has.
 
-This was built for my own [url=https://www.nexusmods.com/starfield/mods/17579]UC Classified Gear Sets - AEGIS Prototype Armor[/url], whose Technician set puts a deployable turret and its recall item into one slot. Two items sharing one slot is exactly why the slot has to be reserved: both need to know where they live. For that case the grid draws its own symbols, because a slot like this is the one place the game's icon data cannot be relied on.
+This was built for [url=https://www.nexusmods.com/starfield/mods/17579]UC Classified Gear Sets - AEGIS Prototype Armor[/url], whose Technician set puts a deployable turret and its recall item into one slot. Two items sharing one slot is exactly why the slot has to be reserved: both need to know where they live. For that case the grid draws its own symbol, so the turret and its recall item stay tellable apart.
 
 [size=4][b]KEYS[/b][/size]
 
