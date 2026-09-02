@@ -1,52 +1,12 @@
-Version 1.0.2
-
-Controller and arrow-key support, and a fix for rows turning up on the wrong
-save.
-
-NEW
-
-- Controller and arrow keys drive the grid. Up and down change the row, left
-  and right step through the slots, and the face button uses the selected one
-  as it always did. Opening the menu starts on row 1, slot 1. Nothing is
-  intercepted for this: the mod ships the favorites menu itself, so the
-  directions are simply defined there.
-- WrapNavigation (INI, off by default): whether the ends of a row and of the
-  row stack are walls or doors. Applies to slots and rows alike.
-
-FIXED
-
-- Rows no longer leak between saves. Each save keeps its own state file, so
-  loading an older save no longer brings in the favorites of the run you just
-  left. Reported by fabs1.
-- The quantity in brackets now counts down as you use an item. It was read
-  from the favorites wheel's item card, which is not refreshed while the grid
-  hides the wheel, so it stayed at whatever it was when the card was last
-  seen. It comes from the inventory now. Reported by ZombieMonkeyNZ - this
-  was not a conflict with StarUI or Free Lanes Update.
-- A slot whose item you no longer carry stays dimmed. It used to turn bright
-  again after saving, after closing the menu, or after changing rows.
-- Three items were never dimmed at all, because the check exempted anything
-  the game does not store as a plain inventory favorite. That exemption is
-  for powers, which are never in the inventory and always available.
-- An icon is no longer lost when the wheel hands over a card without one.
-  That wiped the stored icon permanently, so one look at the menu could leave
-  a cell blank for good.
-- A reserved slot with no icon shows the item's name, as grid cells already
-  did.
-- Favorites you first meet in a save now land on your default row rather than
-  on row 1.
-- A cell that has no icon shows the item's name instead of drawing nothing.
-
-CHANGED
-
-- The INI has two sections now, [Grid] and [Controls]. Your existing values
-  are picked up from their old places; nothing needs editing.
-- Enabled, HideWheel and Icons are gone. There was no setting of them that
-  made sense: the grid is the mod, the wheel is what it replaces, and a cell
-  without an icon already falls back to the item's name by itself.
-
-KNOWN
-
-- A save this mod has never seen shows editor IDs instead of icons in row 1
-  until the favorites menu has been in edit mode once. The icons come from
-  the wheel's item cards, and the wheel is hidden.
+Added: controller and arrow-key navigation of the grid - up and down change the row, left and right step through the slots
+Added: WrapNavigation in the INI - whether the ends of a row and of the row stack are walls or doors (off by default)
+Fixed: rows no longer leak between saves - each save keeps its own state file, so loading an older save does not bring in the favorites of the run you just left (reported by fabs1)
+Fixed: the quantity in brackets now counts down as you use an item - it came from the wheel's item card, which is not refreshed while the grid hides the wheel (reported by ZombieMonkeyNZ - not a StarUI or Free Lanes conflict)
+Fixed: a slot whose item you no longer carry stays dimmed - it used to turn bright again after saving, after closing the menu, or after changing rows
+Fixed: items the game does not store as plain inventory favorites were never dimmed at all - that exemption is meant for powers
+Fixed: an icon is no longer lost for good when the wheel hands over a card without one
+Fixed: a reserved slot with no icon now shows the item's name, as grid cells already did
+Fixed: favorites first met in a save land on your default row rather than on row 1
+Changed: the INI has two sections now, [Grid] and [Controls] - your existing values are picked up from their old places, nothing needs editing
+Removed: Enabled, HideWheel and Icons - there was no setting of them that made sense
+Known: a save this mod has never seen shows editor IDs instead of icons in row 1 until the favorites menu has been in edit mode once
