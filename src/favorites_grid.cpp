@@ -2189,9 +2189,22 @@ namespace FB
             return;
         }
         RE::Scaleform::GFx::Value overlay;
-        if (!FindChild(root, stage, "FavoritesBanksGrid", overlay) &&
-            !BuildOverlay(root, stage, overlay)) {
-            return;
+        bool freshlyOpened = false;
+        if (!FindChild(root, stage, "FavoritesBanksGrid", overlay)) {
+            if (!BuildOverlay(root, stage, overlay)) {
+                return;
+            }
+            freshlyOpened = true;
+        }
+        if (freshlyOpened) {
+            // Driven from here rather than from the movie's own data update,
+            // because that update guards itself with IsDataInitialized and
+            // that flag is never cleared: the selection was forced to slot 1
+            // on the first opening of a session and never again. A fresh
+            // overlay, on the other hand, means exactly one thing -- the
+            // wheel has just been opened.
+            menu->menuObj.SetMember(
+                "selectedIndex", RE::Scaleform::GFx::Value(0.0));
         }
         // Unconditional. The grid exists so that the wheel does not have to
         // be looked at; leaving it drawn only put the two on top of each

@@ -96,11 +96,7 @@ package
       public var FavoritesBanksClearSlot:Function = null;
       
       public var FavoritesBanksSwitchRow:Function = null;
-      
-      // The direction that opens the wheel also arrives here as a key press.
-      // Acting on it moved the selection off slot 1 before the player had
-      // pressed anything, so the first direction after an open is consumed.
-      private var FavoritesBanksFreshOpen:Boolean = false;
+
 
       // 0 disables it. Flash key codes match Windows virtual key codes
       // for the keys this accepts, so the DLL passes the parsed INI
@@ -175,7 +171,6 @@ package
             this.selectedIndex = this.FavoritesBanksSwitchRow != null
                ? 0
                : param1.data.uStartingSelection;
-            this.FavoritesBanksFreshOpen = this.FavoritesBanksSwitchRow != null;
             this.CenterClip_mc.gotoAndStop(this.isAssigningItem() ? "Inventory" : "Quick");
          }
          this.SelectQuickslot_mc.visible = this.isAssigningItem() && !this.HasAssignedSlotOnce;
@@ -411,15 +406,6 @@ package
          }
          if(this.FavoritesBanksSwitchRow != null)
          {
-            if(this.FavoritesBanksFreshOpen
-               && (param1.keyCode == Keyboard.UP
-                  || param1.keyCode == Keyboard.DOWN
-                  || param1.keyCode == Keyboard.LEFT
-                  || param1.keyCode == Keyboard.RIGHT))
-            {
-               this.FavoritesBanksFreshOpen = false;
-               return;
-            }
             switch(param1.keyCode)
             {
                case Keyboard.UP:

@@ -385,7 +385,13 @@ class SourceInvariantTests(unittest.TestCase):
             "void ReconcileNativePageWithBank", 1
         )[0]
         # Powers have no inventory row and must never be judged missing.
-        self.assertIn("FavoriteKind::kInventory", carried)
+        # The exemption is for powers, which are never in the inventory
+        # and always available. Writing it as "not an inventory slot"
+        # let three real items through: the Technician turret, frag
+        # grenade and field kit are stored as kForm, so they counted as
+        # always-present and stayed bright after leaving the inventory.
+        self.assertIn("stored.visual.isPower", carried)
+        self.assertNotIn("kind != FavoriteKind::kInventory", carried)
         self.assertIn("carriedForms", carried)
 
         reconcile = core.split("void ReconcileNativePageWithBank", 1)[1].split(
@@ -1065,9 +1071,16 @@ class SourceInvariantTests(unittest.TestCase):
         self.assertIn("this.FavoritesBanksSwitchRow(-1);", as_source)
         self.assertIn("this.FavoritesBanksSwitchRow(1);", as_source)
         self.assertIn("FavoritesBanksStepSlot", as_source)
-        # The direction that opens the wheel arrives here too and must not
-        # move anything: the selection starts on slot 1 whatever was pressed.
-        self.assertIn("FavoritesBanksFreshOpen", as_source)
+        # The direction that opens the wheel does NOT arrive here -- proven
+        # by measurement: swallowing a first press cost the player an extra
+        # one before anything moved. The selection is put on slot 1 from the
+        # C++ side instead, once per opening, when the overlay is built.
+        self.assertNotIn("FavoritesBanksFreshOpen", as_source)
+        grid = strip_line_comments(
+            (ROOT / "src" / "favorites_grid.cpp").read_text(encoding="utf-8")
+        )
+        fresh = grid.split("freshlyOpened = true;", 1)[1].split("geometry", 1)[0]
+        self.assertIn('"selectedIndex"', fresh)
         # A row change keeps the slot; the wheel used to blank the selection.
         self.assertIn("_loc5_ != FS_NONE", as_source)
         # Ends of a row: walls or doors, and that one is the player's call.
@@ -1168,6 +1181,26 @@ class SourceInvariantTests(unittest.TestCase):
         )[0]
         self.assertIn("descriptor.visual.count = found->second;", refresh)
         self.assertIn("carriedCounts.find", refresh)
+
+    def test_a_page_change_leaves_the_faint_flags_correct(self) -> None:
+        """Every point that rewrites the rows re-asks the inventory.
+
+        The flag went wrong in a different place each time it was chased: the
+        commit cleared it, then the reconcile did, then a page change did.
+        Trusting each writer to leave it alone does not hold, so the rule is
+        applied at the end of the rewrite instead. Assigning favorites does
+        not change what the player carries, so the page read before the
+        writes still describes the inventory.
+        """
+        core = strip_line_comments(self.core)
+        materialize = core.split("bool MaterializeBankLocked", 1)[1].split(
+            "void RefreshCarriedFlagsLocked", 1
+        )[0]
+        self.assertIn("RefreshCarriedFlagsLocked(committed);", materialize)
+        # Declared before use, since the definition sits further down.
+        self.assertIn(
+            "void RefreshCarriedFlagsLocked(const NativePage& nativePage);",
+            core)
 
     def test_a_capture_keeps_the_faint_flag_honest(self) -> None:
         """Saving must not make an item the player lost look carried.

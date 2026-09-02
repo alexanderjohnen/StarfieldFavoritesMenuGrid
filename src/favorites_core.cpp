@@ -1123,7 +1123,20 @@ namespace FB
             const FavoriteSlot& stored,
             const NativePage& nativePage)
         {
-            if (stored.kind != FavoriteKind::kInventory) {
+            if (stored.kind == FavoriteKind::kEmpty) {
+                return true;
+            }
+            // A power is never in the inventory and is always available, so
+            // it must not be drawn faint. That exemption used to be written
+            // as "anything that is not an inventory slot", and three real
+            // items walked straight through it: the Technician turret, frag
+            // grenade and field kit are stored as kForm, so they counted as
+            // always-present and stayed bright after leaving the inventory.
+            // Being a power is a property of the item, not of how the slot
+            // happens to be recorded. Read from the card rather than asked
+            // of the engine: no virtual call, and no form type table to keep
+            // in step with the game.
+            if (stored.visual.isPower) {
                 return true;
             }
             const auto* form = ResolveForm(stored.form);
@@ -2126,6 +2139,13 @@ namespace FB
         // the native one. Needed after editing a page in place: the stored
         // descriptors changed, so "already committed" is no longer true and
         // the next capture would otherwise write the old arrangement back.
+        // Defined below; needed here so a page change can leave the faint
+        // flags correct. Every point that rewrites the rows now ends by
+        // asking the inventory again, rather than each of them being trusted
+        // to leave the flag alone -- which is what kept going wrong, in a
+        // different place each time.
+        void RefreshCarriedFlagsLocked(const NativePage& nativePage);
+
         [[nodiscard]] bool MaterializeBankLocked(
             std::size_t targetBank,
             bool a_force = false)
@@ -2287,6 +2307,11 @@ namespace FB
             }
 
             g_nativeBank = targetBank;
+            // Assigning favorites does not change what the player carries,
+            // so the page read before the writes still describes the
+            // inventory. Without this, changing rows left row 1 bright until
+            // the menu was closed and opened again.
+            RefreshCarriedFlagsLocked(committed);
             RebuildFavoritesData(manager);
             static_cast<void>(SaveCurrentStateLocked(false));
             REX::INFO(
