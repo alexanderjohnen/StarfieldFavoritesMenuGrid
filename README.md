@@ -71,11 +71,20 @@ always act on your **default row**, which goes back into the game's real
 slots every time the menu closes. Set which one with `DefaultRow` in the
 INI.
 
-**No controller support.** The grid is mouse-driven, and rather than ship a
-half-working gamepad path there is none at all. The design is worked out - the
-wheel's selection is a property the plugin can read and set, so the grid could
-follow a gamepad without intercepting any input - but it needs someone who
-plays that way to test it. Say so on the mod page if that is you.
+**Controller and arrow keys.** The D-pad drives the grid rather than the
+wheel: **up and down change the row, left and right step through the slots**,
+and the face button uses the selected one exactly as it always did. The
+arrow keys on the keyboard do the same. Opening the menu always starts on
+row 1, slot 1.
+
+Nothing is intercepted to make this work. The mod ships the favorites menu
+itself, so what the directions *mean* is simply defined there; the wheel's
+own selection is a property the plugin reads, and the vanilla key handling
+keeps running underneath.
+
+By default the ends are walls: the last slot stays put when you press right
+again. Set `WrapNavigation=1` in the INI to make them doors instead, for
+slots and rows alike.
 
 ## How the rows work
 
@@ -135,7 +144,6 @@ manager say so instead of letting two plugins fight over the same wheel.
 ## Known limits
 
 - Locked to Starfield 1.16.244.0. A game update needs a matching build.
-- No controller support for the grid.
 - The inventory heart can only represent the row currently in the real slots.
 - Item icons come from the wheel's own item cards, which the game hands over
   only when the favorites change while the menu is open. A slot that has never
@@ -154,6 +162,9 @@ Added:
 - edit mode: moving favorites between slots and rows, deleting from a cell
 - `ExternallyManagedSlots`, and drawn symbols for a reserved slot
 - `DefaultRow`, restored on every close, and `ToggleEquipOnSelect`
+- controller and arrow-key navigation of the grid, with `WrapNavigation`
+- a state file per save, so loading an older save no longer brings the rows
+  of the run you just left
 
 Removed, because the grid replaces them or they belong to the wheel:
 
@@ -163,6 +174,9 @@ Removed, because the grid replaces them or they belong to the wheel:
 - the keys `F1`-`F8`, `PrevPageKey`/`NextPageKey` and `ModifierKey`: with one
   row always restored on close, they had nothing left to do
 - `IconSize`, `IconTelemetry`, `PollIntervalMs`
+- `Enabled`, `HideWheel` and `Icons`: there was no setting of them that made
+  sense. The grid is the mod, the wheel is what it replaces, and a cell
+  without an icon already falls back to the item's name by itself.
 
 ## Building from source
 

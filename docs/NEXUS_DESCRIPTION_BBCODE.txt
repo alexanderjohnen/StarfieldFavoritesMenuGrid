@@ -54,11 +54,13 @@ This was built for my own [url=https://www.nexusmods.com/starfield/mods/17579]UC
 
 The normal 1-0, [ and ] quickkeys keep their vanilla behaviour and always act on your [b]default row[/b], which goes back into the game's real slots every time the menu closes. You choose which row that is.
 
-[size=4][b]NO CONTROLLER SUPPORT[/b][/size]
+[size=4][b]CONTROLLER AND ARROW KEYS[/b][/size]
 
-The grid is mouse-driven. Rather than ship a half-working gamepad path there is none at all.
+The D-pad drives the grid instead of the wheel: [b]up and down change the row, left and right step through the slots[/b], and the face button uses the selected one exactly as it always did. The arrow keys do the same. Opening the menu always starts on row 1, slot 1.
 
-The design is worked out - the wheel's selection is a property the plugin can read and set, so the grid could follow a gamepad without intercepting any input - but I do not play with a controller and will not ship something I cannot test. [b]If you do, say so in the posts.[/b] A willing tester is all this needs.
+Nothing is intercepted to make that work. This mod ships the favorites menu itself, so what the directions mean is defined there; the wheel's own selection is a property the plugin reads, and the vanilla handling keeps running underneath.
+
+By default the ends are walls - the last slot stays put when you press right again. Set [b]WrapNavigation=1[/b] in the INI to make them doors instead, for slots and rows alike.
 
 [size=4][b]HOW THE ROWS WORK[/b][/size]
 
@@ -86,7 +88,6 @@ All settings live in FavoritesMenuGrid.ini, which explains every option in place
 
 [list]
 [*]Locked to Starfield 1.16.244.0. A game update needs a matching build.
-[*]No controller support for the grid.
 [*]The inventory heart can only represent the row currently in the real slots.
 [*]Item icons come from the wheel's own item cards, which the game hands over only when favorites change while the menu is open. A slot never described that way shows its editor ID until it is.
 [*]An item you no longer carry leaves its slot faint but still assigned. It works again when the item returns.
