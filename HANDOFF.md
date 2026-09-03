@@ -786,6 +786,35 @@ mitzieht und ob A danach den richtigen Slot benutzt. Der XInput-Code wurde
 beim Aufräumen entfernt und müsste aus der Git-losen Historie oder aus
 `FavoritesBanks-0.7.5-source/src/main.cpp` zurückgeholt werden.
 
+## 0k. Der Edit-Modus ist mit Controller nicht erreichbar (offen)
+
+Beim Einbau der Steuerkreuz-Navigation uebersehen, von Alexander bemerkt:
+**Der Edit-Modus laesst sich mit Controller ueberhaupt nicht bedienen.** Drei
+Teile haengen alle am Mauszeiger:
+
+1. **Umschalten.** `ToggleEditMode()` wird ausschliesslich aus dem
+   Klick-Handler gerufen, ueber `localX`/`localY` auf die EDIT-Zelle im
+   rechten Streifen. Der Streifen ist nicht Teil von `selectedIndex` (das
+   deckt nur die zwoelf Slots ab), also fuehrt dort kein Weg hin.
+2. **Aufnehmen und Ablegen.** Beides sind Klicks auf Zellen.
+3. **Loeschen.** `ClearHoveredGridCell` arbeitet auf `g_hoveredRow` und
+   `g_hoveredSlot`, und die setzt nur die Mausbewegung.
+
+**Die guten Nachrichten:** Punkte 2 und 3 lassen sich sauber auf die
+vorhandene Auswahl abbilden. Die Aktionstaste laeuft ohnehin ueber den
+Auswahlpfad des Menues — im Edit-Modus muesste sie aufnehmen und ablegen
+statt benutzen; und die Loeschtaste muesste auf `selectedIndex` wirken, wenn
+kein Zeiger da ist.
+
+**Offen ist Punkt 1**, und dafuer fehlt eine Messung: Wir lesen keine
+Controllereingabe, nur `selectedIndex`. Ob andere Tasten des Controllers
+ueberhaupt als `keyCode` in `onKeyDownHandler` ankommen, ist unbekannt. Der
+billige erste Schritt waere, dort jeden unbekannten `keyCode` einmal zu
+protokollieren, waehrend das Menue offen ist — dieselbe Methode, die bei
+`SaveLoadEvent: opType/status` funktioniert hat.
+
+---
+
 ## 0j. Wie die oeffentlichen Texte klingen sollen (2026-09-02)
 
 Zwei Vorgaben von Alexander, beide aus dem Ueberarbeiten der 1.0.2-Beschreibung.
