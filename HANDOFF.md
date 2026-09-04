@@ -1,15 +1,44 @@
 # Favorites Menu Grid — Arbeitsstand
 
-Stand: 2026-09-02 (siehe Abschnitt 0c). Basisstand der Chronik: 2026-08-30. Basis ist das offizielle **0.7.6** von Nexus, ergänzt um
-eigene Features, die es dort nicht gibt.
+Stand: 2026-09-03, Version 1.0.2 ausgeliefert. **Abschnitt 0 ist der
+Einstieg** — dort steht, was gilt und was offen ist. Die Abschnitte 0a bis 0k
+sind die Chronik dazu, alles ab Abschnitt 1 die dauerhafte Dokumentation.
+Basis ist das offizielle **0.7.6** von Nexus, ergänzt um eigene Features.
 
 ---
 
-## 0. Stand nach dem Release (2026-09-01)
+## 0. Aktueller Stand (2026-09-03)
 
-**Die Mod heißt jetzt `Favorites Menu Grid - SFSE`**, Autor `LX6R`, Version
-1.0.0, auf Nexus veröffentlicht als Fork von Sators Favorites Banks
-(GPL-3.0-or-later, Quellarchiv liegt daneben). Dateien im Spiel:
+**Version 1.0.2 ist auf Nexus.** Die Versionsgeschichte ist leicht
+irrefuehrend: 1.0.0 war das Erstrelease, **1.0.1 ist dieselbe 1.0.0 mit
+korrigierter README** (nicht der Umbau aus 0b/0c, der wurde nie
+ausgeliefert), und 1.0.2 traegt alles aus 0c bis 0h.
+
+**Quellcode ist oeffentlich:**
+`https://github.com/alexanderjohnen/StarfieldFavoritesMenuGrid`, Tag
+`v1.0.2`. **Vor jedem Deploy committen** — das Projekt hatte bis zum
+2026-09-02 keine Historie, und das hat einen Abend gekostet (0i).
+
+### Was offen ist
+
+1. **Ungetestet:** die Blass-Markierung nach einem Seitenwechsel. Vierter
+   Anlauf an derselben Sache, diesmal als Regel am Ende von
+   `ReconcileNativePageWithBank` statt als Korrektur am jeweiligen Schreiber
+   (0d). Alexander hat 1.0.2 bewusst ohne diesen Test ausgeliefert.
+2. **Der Edit-Modus ist mit Controller nicht erreichbar** (0k). Zwei der drei
+   Teile sind einfach, der dritte braucht erst eine Messung.
+3. **Icons fehlen in Spielstaenden, die die Mod nie gesehen hat** — bewusst
+   nicht behoben, Entscheidung von Alexander (0d).
+4. **`PowerIconScalePercent` ist ein Stellrad fuer einen Messfehler.** Power-
+   Icons werden als 1250x600 vermessen, obwohl das sichtbare Symbol kleiner
+   ist. Wird die Messung richtig, kann die Option ersatzlos weg.
+5. **Unentschieden:** ob „wheel" durchgaengig durch „favorites menu" ersetzt
+   wird (0j). In der Einleitung ist es raus, im Rest steht es noch.
+
+### Was gilt
+
+**Autor** `LX6R`, Fork von Sators Favorites Banks (GPL-3.0-or-later,
+Quellarchiv liegt daneben). Dateien im Spiel:
 `FavoritesMenuGrid.dll`, `FavoritesMenuGrid.ini`, `favoritesmenu.swf`.
 Zustandsordner: `Documents / My Games / Starfield / SFSE / Plugins / FavoritesMenuGrid / States`.
 
@@ -30,8 +59,182 @@ WrapNavigation, ExternallyManagedSlots, PinnedSymbols.
 `HideWheel`, `Enabled` und `Icons` sind am 2026-09-02 **ersatzlos entfallen**,
 `[Settings]` als Sektion ebenfalls (0h).
 
+**Controller und Pfeiltasten** steuern das Raster: hoch/runter wechselt die
+Reihe, links/rechts den Slot, beim Oeffnen startet die Auswahl auf Reihe 1
+Slot 1. Nichts wird abgefangen — die Mod liefert `favoritesmenu.swf` selbst
+aus, die Bedeutung der Richtungen steht also im ActionScript (0a). Die SWF
+wird mit `build_swf.py` neu gebaut (FFDec).
+
 Alles Ältere in diesem Dokument ist Chronik: die beschriebenen Fehler und
 Ursachen stimmen, die genannten Optionen gibt es teils nicht mehr.
+
+---
+
+## 0a. Controller-Support: Entwurf, ungebaut
+
+Wird auf Nexus und Discord nachgefragt. Der Weg ist recherchiert.
+
+**Die Praemisse hat sich am 2026-09-02 geaendert:** Alexander hat einen
+Xbox-Controller hervorgeholt und testet selbst. „Gesucht wird ein Tester"
+gilt fuer die *Entwicklung* nicht mehr — bestenfalls noch fuer die
+Bestaetigung auf fremder Hardware (andere Controller, Steam-Input-Remapping).
+
+Das ist wichtiger, als es klingt: Praktisch jeder belastbare Befund dieses
+Projekttags kam aus dem Log und aus den Zustandsdateien, nicht aus dem
+Nachdenken ueber Code. Drei Hypothesen lagen daneben und wurden von
+Artefakten widerlegt. Bei einem entfernten Tester kostet jede falsche
+Hypothese einen vollen Umlauf statt zwei Minuten. **Wenn doch einmal aus der
+Ferne getestet wird: nicht nach Beschreibungen fragen, sondern nach
+`Documents/My Games/Starfield/SFSE/Logs/Favorites Menu Grid.log` — und vorher
+eine Diagnose einbauen, die die Frage in *einem* Durchlauf beantwortet.**
+Genau so haben `SaveLoadEvent: opType/status` und `carried-probe`
+funktioniert.
+
+**Der entscheidende Fund** steht in `swf-src/scripts/FavoritesMenu.as`:
+
+```actionscript
+public function get selectedIndex() : uint
+public function set selectedIndex(param1:uint) : void
+```
+
+Die Auswahl des Rads ist **öffentlich lesbar und setzbar**. Damit braucht es
+nirgends eine Eingabe-Unterdrückung — und genau daran scheitern solche
+Vorhaben sonst. Die Recherche zur Originalmod hält fest, dass das Rad im
+Gameplay-Kontext läuft, wo `LShoulder`/`RShoulder` gar nicht existieren;
+gelesen wird deshalb direkt über XInput (Beobachten ist harmlos).
+
+**Warum nicht das Steuerkreuz**, obwohl es naheliegt: Die zwölf Slots sind auf
+dem Rad vier Richtungen mal drei Ringe, nachzulesen in den Konstanten von
+`FavoritesMenu.as` — `FS_LEFT_3=0`, `FS_LEFT_2=1`, `FS_LEFT_1=2`,
+`FS_RIGHT_1=3` … `FS_DOWN_3=11`, mit eigenen Fokusgrafiken
+`UIMenuQuickUseFocusDpadA/B/C` pro Ring. Im Raster liegen Slot 3 und 4
+nebeneinander, auf dem Kreuz sind es gegenüberliegende Seiten. Ein linearer
+Schritt nach rechts ist dort kein Richtungswechsel. Dazu bewegt das Spiel
+`selectedIndex` bei jedem Kreuz-Druck selbst — wir müssten die Vanilla-Reaktion
+unterdrücken, und genau daran scheitern solche Vorhaben (siehe die Notizen zum
+`BSInputEnableManager` aus dem VATS-Projekt: zu grob, schaltet Nachbarfunktionen
+mit ab).
+
+**Vorgesehene Belegung:**
+
+- **Schultertasten** → `selectedIndex` linear ±1 durch die Zeile. Passt besser
+  zum Raster als das Vanilla-Kreuz, das in Himmelsrichtungen springt.
+- **Trigger LT/RT** → Zeile hoch/runter. `leftTrigger`/`rightTrigger` lagen in
+  der XInput-Struktur schon vor, ungenutzt.
+- **A** → benutzen, unverändert vanilla.
+- **Steuerkreuz** macht weiter sein Vanilla-Ding und schreibt dieselbe
+  Variable; stört also nicht.
+
+**Was das Grid dafür braucht:** Es muss `selectedIndex` *anzeigen* — bisher
+kennt es nur den Mauszeiger. Eine hervorgehobene Zelle, sonst sieht der
+Controller-Nutzer nicht, wo er ist.
+
+**Am Geraet gemessen (2026-09-02, Xbox-Controller).** Das Grid ist mit
+Controller schon benutzbar: Das Menue oeffnet, und das Spiel behandelt es wie
+das normale Rad. Das Steuerkreuz wandert **links/rechts durch die Slots 1-6
+und hoch/runter durch 7-12** — genau die Aufteilung, die die `FS_*`-Konstanten
+vorgeben (`FS_LEFT_3`..`FS_RIGHT_3` = 0..5, `FS_UP_*`/`FS_DOWN_*` = 6..11).
+Damit ist gemessen, was oben nur aus dem Quelltext geschlossen war, und der
+Einwand gegen das Steuerkreuz ist bestaetigt: Was im Raster nebeneinander
+liegt, liegt auf dem Kreuz auf gegenueberliegenden Seiten. Die weiteren Reihen
+ignoriert es erwartungsgemaess (das Rad kennt nur zwoelf Slots), und eine
+Markierung der Auswahl fehlt — beides genau die zwei Luecken, die der Entwurf
+oben fuellen will.
+
+### Schritt 1 gebaut: das Grid zeigt die Auswahl (2026-09-02)
+
+Vor jeder Eingabe kommt die Anzeige — sie beweist die tragende Annahme und
+ist sofort sichtbar, ganz ohne XInput.
+
+`ReadSelectedIndex` liest `selectedIndex` schlicht als Eigenschaft von
+`menu->menuObj`; `ReadNumber` deckt die `UInt`-Form ab, in der sie kommt.
+`kNoSelection` ist 12, das `FS_NONE` der ActionScript-Seite. `MoveSelection`
+zeichnet einen **eigenen** Marker namens `GridSelection` — bewusst als Umriss
+statt als Fläche, damit bei Maus **und** Controller auf dem Schirm
+unterscheidbar bleibt, welcher der beiden was treibt. Der vorhandene
+Highlight kam dafuer nicht in Frage: Er haengt an Cursor-Ereignissen, die ein
+Controller nie sendet.
+
+Gezeichnet wird nach den Zellen (liegt also oben) und auf der **aktiven
+Reihe**, weil das die Seite ist, die das Rad zeigt. Liegt der Index nicht in
+`geometry.pageSlots`, wird der Marker versteckt statt geraten.
+
+48 Tests gruen, gebaut und deployed. **Ungetestet.** Der Test braucht nur den
+Controller: Steuerkreuz druecken, der Umriss muss mitwandern — links/rechts
+durch die Slots 1-6, hoch/runter durch 7-12.
+
+### Schritt 2 gebaut: das Steuerkreuz gehoert jetzt dem Raster (2026-09-02)
+
+**Der Entwurf mit Schultertasten und XInput ist verworfen.** Alexanders
+Einwand traf: Die Vanilla-Reaktion muss gar nicht unterdrueckt werden, weil
+**die Mod die SWF selbst ausliefert**. Was die Tasten bedeuten, wird also
+schlicht im ActionScript umgeschrieben. Kein XInput, kein Polling, keine
+Eingabeunterdrueckung — und die Pfeiltasten der Tastatur verhalten sich als
+Zugabe gleich.
+
+**Belegung:** hoch/runter wechselt die **Reihe**, links/rechts den **Slot**
+(linear, an beiden Enden geklemmt statt umlaufend — auf zwoelf Zellen liest
+sich Umlaufen wie ein Fehler). Beim Oeffnen landet die Auswahl immer auf
+Slot 1, statt auf dem Platz, den die gedrueckte Richtung im Rad getroffen
+haette.
+
+Verworfen wurde dabei Alexanders eigener zweiter Vorschlag (hoch/links/rechts/
+runter waehlen beim Oeffnen Reihe 1/2/3/4): Er setzt genau vier Reihen voraus,
+`RowCount` geht aber von 2 bis 8. Bei zwei Reihen zeigten zwei Richtungen ins
+Leere, bei acht waere die Haelfte per Geste unerreichbar.
+
+**Teile:**
+- `SwitchRowHandler` in `favorites_ui.cpp`, registriert als
+  `FavoritesBanksSwitchRow` — dasselbe Muster wie `FavoritesBanksClearSlot`.
+  Nimmt ein Vorzeichen, klemmt auf `rowCount`, ruft `QueueBankSwitch`.
+- `FavoritesBanksStepSlot` in `FavoritesMenu.as`. Rechnet als `int`, weil
+  `selectedIndex` ein `uint` ist: Null zu dekrementieren liefe sonst auf vier
+  Milliarden ueber.
+- Beide Zweige haengen an `this.FavoritesBanksSwitchRow != null`. Fehlt der
+  Rueckruf (neue SWF, alte DLL), greifen die alten Richtungstabellen
+  unveraendert.
+
+**`swf-src/scripts/` ist ab jetzt Quellcode, keine Referenz mehr.**
+`build_swf.py` baut die SWF neu: exportiert alle 59 Skripte mit FFDec, tauscht
+nur die ein, die wir pflegen, importiert zurueck und legt eine `.bak` an.
+Vorher wurde geprueft, dass ein Durchlauf **ohne** Aenderung zeichengleich
+zurueckdekompiliert — das Werkzeug selbst veraendert also nichts.
+
+**Erster Test, zwei Nachbesserungen (2026-09-02).** Links/rechts durch die
+Slots und hoch/runter durch die Reihen funktionierte sofort. Zwei Dinge nicht:
+
+1. **Die Auswahl startete nicht auf Slot 1.** Die Richtung, mit der das Rad
+   geoeffnet wird, kommt **zusaetzlich als Tastenereignis** an und wurde
+   sofort als Bewegung ausgefuehrt. `FavoritesBanksFreshOpen` verschluckt
+   jetzt den ersten Richtungsdruck nach dem Oeffnen.
+2. **Der Reihenwechsel warf die Auswahl auf den Anfang zurueck.** Die SWF
+   setzt beim Wechsel der gezeichneten Reihe `selectedIndex = FS_NONE` — im
+   Rad sinnvoll, dessen Ringe je Seite andere zwoelf sind; im Raster sind es
+   immer dieselben zwoelf. Der Slot wird jetzt um die Aktualisierung herum
+   gesichert und wiederhergestellt (nicht einfach stehengelassen, damit die
+   Entry-Clips ihre Auswahlmarkierung mitbekommen).
+
+**Neue Option `[Controls] WrapNavigation`** (Standard 0, Alexanders
+Vorschlag): Enden als Wand oder als Tuer — Slot 12 nach rechts bleibt stehen
+oder landet auf Slot 1, Reihe 1 nach oben ebenso. Gilt fuer Slots **und**
+Reihen. Diese Option ist von anderer Art als die vier ausgebauten: Es gibt
+keine richtige Antwort, nur einen Geschmack. Genau dafuer sind Optionen da.
+
+**Offen, noch nicht angefasst:** Mit `ExternallyManagedSlots` wandert der
+Schritt weiterhin durch alle zwoelf Indizes, auch durch reservierte — die
+aber nicht in der Reihe gezeichnet werden, sondern im Streifen rechts. Der
+Marker versteckt sich dann (er zeigt nur, was in `geometry.pageSlots` steht).
+Bei Alexander faellt das nicht auf, er hat `ExternallyManagedSlots=0`.
+
+**Ungetestet.** Zu pruefen: wechselt hoch/runter die Reihe, wandert
+links/rechts durch die Slots, und startet die Auswahl auf Slot 1.
+
+**Weiter ungeprueft:** ob das *Setzen* von `selectedIndex` die sichtbare Markierung
+mitzieht und ob A danach den richtigen Slot benutzt. Der XInput-Code wurde
+beim Aufräumen entfernt und müsste aus der Git-losen Historie oder aus
+`FavoritesBanks-0.7.5-source/src/main.cpp` zurückgeholt werden.
+
+---
 
 ## 0b. 1.0.1 — gebaut und deployed, ungetestet (2026-09-02)
 
@@ -95,6 +298,8 @@ Verlauf unsichtbar, und der Schattensaum unter der Schrift (y=543..554) bleibt
 1:1 erhalten, sonst entstünde direkt unter den Buchstaben eine harte Kante.
 Ergebnis: `Downloads/FavoritesMenuGrid-thumbnail.png`. Gerechnet mit
 System.Drawing über PowerShell, weil kein Pillow installiert ist.
+
+---
 
 ## 0c. 1.0.1 im Spiel geprueft — drei Fehler gefunden und behoben (2026-09-02)
 
@@ -622,199 +827,6 @@ sauber.** Was von ihnen bleibt, sind die Befunde in 0d und 0e.
 
 ---
 
-## 0a. Controller-Support: Entwurf, ungebaut
-
-Wird auf Nexus und Discord nachgefragt. Der Weg ist recherchiert.
-
-**Die Praemisse hat sich am 2026-09-02 geaendert:** Alexander hat einen
-Xbox-Controller hervorgeholt und testet selbst. „Gesucht wird ein Tester"
-gilt fuer die *Entwicklung* nicht mehr — bestenfalls noch fuer die
-Bestaetigung auf fremder Hardware (andere Controller, Steam-Input-Remapping).
-
-Das ist wichtiger, als es klingt: Praktisch jeder belastbare Befund dieses
-Projekttags kam aus dem Log und aus den Zustandsdateien, nicht aus dem
-Nachdenken ueber Code. Drei Hypothesen lagen daneben und wurden von
-Artefakten widerlegt. Bei einem entfernten Tester kostet jede falsche
-Hypothese einen vollen Umlauf statt zwei Minuten. **Wenn doch einmal aus der
-Ferne getestet wird: nicht nach Beschreibungen fragen, sondern nach
-`Documents/My Games/Starfield/SFSE/Logs/Favorites Menu Grid.log` — und vorher
-eine Diagnose einbauen, die die Frage in *einem* Durchlauf beantwortet.**
-Genau so haben `SaveLoadEvent: opType/status` und `carried-probe`
-funktioniert.
-
-**Der entscheidende Fund** steht in `swf-src/scripts/FavoritesMenu.as`:
-
-```actionscript
-public function get selectedIndex() : uint
-public function set selectedIndex(param1:uint) : void
-```
-
-Die Auswahl des Rads ist **öffentlich lesbar und setzbar**. Damit braucht es
-nirgends eine Eingabe-Unterdrückung — und genau daran scheitern solche
-Vorhaben sonst. Die Recherche zur Originalmod hält fest, dass das Rad im
-Gameplay-Kontext läuft, wo `LShoulder`/`RShoulder` gar nicht existieren;
-gelesen wird deshalb direkt über XInput (Beobachten ist harmlos).
-
-**Warum nicht das Steuerkreuz**, obwohl es naheliegt: Die zwölf Slots sind auf
-dem Rad vier Richtungen mal drei Ringe, nachzulesen in den Konstanten von
-`FavoritesMenu.as` — `FS_LEFT_3=0`, `FS_LEFT_2=1`, `FS_LEFT_1=2`,
-`FS_RIGHT_1=3` … `FS_DOWN_3=11`, mit eigenen Fokusgrafiken
-`UIMenuQuickUseFocusDpadA/B/C` pro Ring. Im Raster liegen Slot 3 und 4
-nebeneinander, auf dem Kreuz sind es gegenüberliegende Seiten. Ein linearer
-Schritt nach rechts ist dort kein Richtungswechsel. Dazu bewegt das Spiel
-`selectedIndex` bei jedem Kreuz-Druck selbst — wir müssten die Vanilla-Reaktion
-unterdrücken, und genau daran scheitern solche Vorhaben (siehe die Notizen zum
-`BSInputEnableManager` aus dem VATS-Projekt: zu grob, schaltet Nachbarfunktionen
-mit ab).
-
-**Vorgesehene Belegung:**
-
-- **Schultertasten** → `selectedIndex` linear ±1 durch die Zeile. Passt besser
-  zum Raster als das Vanilla-Kreuz, das in Himmelsrichtungen springt.
-- **Trigger LT/RT** → Zeile hoch/runter. `leftTrigger`/`rightTrigger` lagen in
-  der XInput-Struktur schon vor, ungenutzt.
-- **A** → benutzen, unverändert vanilla.
-- **Steuerkreuz** macht weiter sein Vanilla-Ding und schreibt dieselbe
-  Variable; stört also nicht.
-
-**Was das Grid dafür braucht:** Es muss `selectedIndex` *anzeigen* — bisher
-kennt es nur den Mauszeiger. Eine hervorgehobene Zelle, sonst sieht der
-Controller-Nutzer nicht, wo er ist.
-
-**Am Geraet gemessen (2026-09-02, Xbox-Controller).** Das Grid ist mit
-Controller schon benutzbar: Das Menue oeffnet, und das Spiel behandelt es wie
-das normale Rad. Das Steuerkreuz wandert **links/rechts durch die Slots 1-6
-und hoch/runter durch 7-12** — genau die Aufteilung, die die `FS_*`-Konstanten
-vorgeben (`FS_LEFT_3`..`FS_RIGHT_3` = 0..5, `FS_UP_*`/`FS_DOWN_*` = 6..11).
-Damit ist gemessen, was oben nur aus dem Quelltext geschlossen war, und der
-Einwand gegen das Steuerkreuz ist bestaetigt: Was im Raster nebeneinander
-liegt, liegt auf dem Kreuz auf gegenueberliegenden Seiten. Die weiteren Reihen
-ignoriert es erwartungsgemaess (das Rad kennt nur zwoelf Slots), und eine
-Markierung der Auswahl fehlt — beides genau die zwei Luecken, die der Entwurf
-oben fuellen will.
-
-### Schritt 1 gebaut: das Grid zeigt die Auswahl (2026-09-02)
-
-Vor jeder Eingabe kommt die Anzeige — sie beweist die tragende Annahme und
-ist sofort sichtbar, ganz ohne XInput.
-
-`ReadSelectedIndex` liest `selectedIndex` schlicht als Eigenschaft von
-`menu->menuObj`; `ReadNumber` deckt die `UInt`-Form ab, in der sie kommt.
-`kNoSelection` ist 12, das `FS_NONE` der ActionScript-Seite. `MoveSelection`
-zeichnet einen **eigenen** Marker namens `GridSelection` — bewusst als Umriss
-statt als Fläche, damit bei Maus **und** Controller auf dem Schirm
-unterscheidbar bleibt, welcher der beiden was treibt. Der vorhandene
-Highlight kam dafuer nicht in Frage: Er haengt an Cursor-Ereignissen, die ein
-Controller nie sendet.
-
-Gezeichnet wird nach den Zellen (liegt also oben) und auf der **aktiven
-Reihe**, weil das die Seite ist, die das Rad zeigt. Liegt der Index nicht in
-`geometry.pageSlots`, wird der Marker versteckt statt geraten.
-
-48 Tests gruen, gebaut und deployed. **Ungetestet.** Der Test braucht nur den
-Controller: Steuerkreuz druecken, der Umriss muss mitwandern — links/rechts
-durch die Slots 1-6, hoch/runter durch 7-12.
-
-### Schritt 2 gebaut: das Steuerkreuz gehoert jetzt dem Raster (2026-09-02)
-
-**Der Entwurf mit Schultertasten und XInput ist verworfen.** Alexanders
-Einwand traf: Die Vanilla-Reaktion muss gar nicht unterdrueckt werden, weil
-**die Mod die SWF selbst ausliefert**. Was die Tasten bedeuten, wird also
-schlicht im ActionScript umgeschrieben. Kein XInput, kein Polling, keine
-Eingabeunterdrueckung — und die Pfeiltasten der Tastatur verhalten sich als
-Zugabe gleich.
-
-**Belegung:** hoch/runter wechselt die **Reihe**, links/rechts den **Slot**
-(linear, an beiden Enden geklemmt statt umlaufend — auf zwoelf Zellen liest
-sich Umlaufen wie ein Fehler). Beim Oeffnen landet die Auswahl immer auf
-Slot 1, statt auf dem Platz, den die gedrueckte Richtung im Rad getroffen
-haette.
-
-Verworfen wurde dabei Alexanders eigener zweiter Vorschlag (hoch/links/rechts/
-runter waehlen beim Oeffnen Reihe 1/2/3/4): Er setzt genau vier Reihen voraus,
-`RowCount` geht aber von 2 bis 8. Bei zwei Reihen zeigten zwei Richtungen ins
-Leere, bei acht waere die Haelfte per Geste unerreichbar.
-
-**Teile:**
-- `SwitchRowHandler` in `favorites_ui.cpp`, registriert als
-  `FavoritesBanksSwitchRow` — dasselbe Muster wie `FavoritesBanksClearSlot`.
-  Nimmt ein Vorzeichen, klemmt auf `rowCount`, ruft `QueueBankSwitch`.
-- `FavoritesBanksStepSlot` in `FavoritesMenu.as`. Rechnet als `int`, weil
-  `selectedIndex` ein `uint` ist: Null zu dekrementieren liefe sonst auf vier
-  Milliarden ueber.
-- Beide Zweige haengen an `this.FavoritesBanksSwitchRow != null`. Fehlt der
-  Rueckruf (neue SWF, alte DLL), greifen die alten Richtungstabellen
-  unveraendert.
-
-**`swf-src/scripts/` ist ab jetzt Quellcode, keine Referenz mehr.**
-`build_swf.py` baut die SWF neu: exportiert alle 59 Skripte mit FFDec, tauscht
-nur die ein, die wir pflegen, importiert zurueck und legt eine `.bak` an.
-Vorher wurde geprueft, dass ein Durchlauf **ohne** Aenderung zeichengleich
-zurueckdekompiliert — das Werkzeug selbst veraendert also nichts.
-
-**Erster Test, zwei Nachbesserungen (2026-09-02).** Links/rechts durch die
-Slots und hoch/runter durch die Reihen funktionierte sofort. Zwei Dinge nicht:
-
-1. **Die Auswahl startete nicht auf Slot 1.** Die Richtung, mit der das Rad
-   geoeffnet wird, kommt **zusaetzlich als Tastenereignis** an und wurde
-   sofort als Bewegung ausgefuehrt. `FavoritesBanksFreshOpen` verschluckt
-   jetzt den ersten Richtungsdruck nach dem Oeffnen.
-2. **Der Reihenwechsel warf die Auswahl auf den Anfang zurueck.** Die SWF
-   setzt beim Wechsel der gezeichneten Reihe `selectedIndex = FS_NONE` — im
-   Rad sinnvoll, dessen Ringe je Seite andere zwoelf sind; im Raster sind es
-   immer dieselben zwoelf. Der Slot wird jetzt um die Aktualisierung herum
-   gesichert und wiederhergestellt (nicht einfach stehengelassen, damit die
-   Entry-Clips ihre Auswahlmarkierung mitbekommen).
-
-**Neue Option `[Controls] WrapNavigation`** (Standard 0, Alexanders
-Vorschlag): Enden als Wand oder als Tuer — Slot 12 nach rechts bleibt stehen
-oder landet auf Slot 1, Reihe 1 nach oben ebenso. Gilt fuer Slots **und**
-Reihen. Diese Option ist von anderer Art als die vier ausgebauten: Es gibt
-keine richtige Antwort, nur einen Geschmack. Genau dafuer sind Optionen da.
-
-**Offen, noch nicht angefasst:** Mit `ExternallyManagedSlots` wandert der
-Schritt weiterhin durch alle zwoelf Indizes, auch durch reservierte — die
-aber nicht in der Reihe gezeichnet werden, sondern im Streifen rechts. Der
-Marker versteckt sich dann (er zeigt nur, was in `geometry.pageSlots` steht).
-Bei Alexander faellt das nicht auf, er hat `ExternallyManagedSlots=0`.
-
-**Ungetestet.** Zu pruefen: wechselt hoch/runter die Reihe, wandert
-links/rechts durch die Slots, und startet die Auswahl auf Slot 1.
-
-**Weiter ungeprueft:** ob das *Setzen* von `selectedIndex` die sichtbare Markierung
-mitzieht und ob A danach den richtigen Slot benutzt. Der XInput-Code wurde
-beim Aufräumen entfernt und müsste aus der Git-losen Historie oder aus
-`FavoritesBanks-0.7.5-source/src/main.cpp` zurückgeholt werden.
-
-## 0k. Der Edit-Modus ist mit Controller nicht erreichbar (offen)
-
-Beim Einbau der Steuerkreuz-Navigation uebersehen, von Alexander bemerkt:
-**Der Edit-Modus laesst sich mit Controller ueberhaupt nicht bedienen.** Drei
-Teile haengen alle am Mauszeiger:
-
-1. **Umschalten.** `ToggleEditMode()` wird ausschliesslich aus dem
-   Klick-Handler gerufen, ueber `localX`/`localY` auf die EDIT-Zelle im
-   rechten Streifen. Der Streifen ist nicht Teil von `selectedIndex` (das
-   deckt nur die zwoelf Slots ab), also fuehrt dort kein Weg hin.
-2. **Aufnehmen und Ablegen.** Beides sind Klicks auf Zellen.
-3. **Loeschen.** `ClearHoveredGridCell` arbeitet auf `g_hoveredRow` und
-   `g_hoveredSlot`, und die setzt nur die Mausbewegung.
-
-**Die guten Nachrichten:** Punkte 2 und 3 lassen sich sauber auf die
-vorhandene Auswahl abbilden. Die Aktionstaste laeuft ohnehin ueber den
-Auswahlpfad des Menues — im Edit-Modus muesste sie aufnehmen und ablegen
-statt benutzen; und die Loeschtaste muesste auf `selectedIndex` wirken, wenn
-kein Zeiger da ist.
-
-**Offen ist Punkt 1**, und dafuer fehlt eine Messung: Wir lesen keine
-Controllereingabe, nur `selectedIndex`. Ob andere Tasten des Controllers
-ueberhaupt als `keyCode` in `onKeyDownHandler` ankommen, ist unbekannt. Der
-billige erste Schritt waere, dort jeden unbekannten `keyCode` einmal zu
-protokollieren, waehrend das Menue offen ist — dieselbe Methode, die bei
-`SaveLoadEvent: opType/status` funktioniert hat.
-
----
-
 ## 0j. Wie die oeffentlichen Texte klingen sollen (2026-09-02)
 
 Zwei Vorgaben von Alexander, beide aus dem Ueberarbeiten der 1.0.2-Beschreibung.
@@ -843,6 +855,35 @@ stammt aus der Modding-Sprache (Skyrim und Fallout hatten radiale
 Favoritenmenues). In der Einleitung ist er raus; im Rest der Beschreibung
 steht er noch neunmal, im README vierzehnmal — **noch nicht entschieden**, ob
 durchgaengig umbenannt wird.
+
+---
+
+## 0k. Der Edit-Modus ist mit Controller nicht erreichbar (offen)
+
+Beim Einbau der Steuerkreuz-Navigation uebersehen, von Alexander bemerkt:
+**Der Edit-Modus laesst sich mit Controller ueberhaupt nicht bedienen.** Drei
+Teile haengen alle am Mauszeiger:
+
+1. **Umschalten.** `ToggleEditMode()` wird ausschliesslich aus dem
+   Klick-Handler gerufen, ueber `localX`/`localY` auf die EDIT-Zelle im
+   rechten Streifen. Der Streifen ist nicht Teil von `selectedIndex` (das
+   deckt nur die zwoelf Slots ab), also fuehrt dort kein Weg hin.
+2. **Aufnehmen und Ablegen.** Beides sind Klicks auf Zellen.
+3. **Loeschen.** `ClearHoveredGridCell` arbeitet auf `g_hoveredRow` und
+   `g_hoveredSlot`, und die setzt nur die Mausbewegung.
+
+**Die guten Nachrichten:** Punkte 2 und 3 lassen sich sauber auf die
+vorhandene Auswahl abbilden. Die Aktionstaste laeuft ohnehin ueber den
+Auswahlpfad des Menues — im Edit-Modus muesste sie aufnehmen und ablegen
+statt benutzen; und die Loeschtaste muesste auf `selectedIndex` wirken, wenn
+kein Zeiger da ist.
+
+**Offen ist Punkt 1**, und dafuer fehlt eine Messung: Wir lesen keine
+Controllereingabe, nur `selectedIndex`. Ob andere Tasten des Controllers
+ueberhaupt als `keyCode` in `onKeyDownHandler` ankommen, ist unbekannt. Der
+billige erste Schritt waere, dort jeden unbekannten `keyCode` einmal zu
+protokollieren, waehrend das Menue offen ist — dieselbe Methode, die bei
+`SaveLoadEvent: opType/status` funktioniert hat.
 
 ---
 
@@ -1117,7 +1158,10 @@ notierte Seite in die echten Slots zurückschreiben statt umgekehrt) und von
 Alexander **abgelehnt** — er will, dass der Spielstand die Wahrheit bleibt.
 Nicht ungefragt nachbauen.
 
-## 5. Offene Probleme
+## 5. Chronik: geloeste Probleme im Detail
+
+(Die Ueberschrift hiess frueher „Offene Probleme" — die Faelle darin sind
+inzwischen alle geloest. Was wirklich offen ist, steht in Abschnitt 0.)
 
 ### 5a. Icon-Darstellung
 
